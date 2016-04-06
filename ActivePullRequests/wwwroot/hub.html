@@ -31,8 +31,8 @@
                 // var workClient = VSS_Service.getCollectionClient(TFS_Work_WebApi.WorkItemTrackingHttpClient);
                 var workClient = TFS_Work_WebApi.getClient();
 
+// Spit out the project name to console just to see if we can get some info
 console.log(VSS.getWebContext().project.name);
-console.log(VSS.getAccessToken());
 
                 // Call the "queryById" REST endpoint, giving a query ID
                 workClient.getWorkItem(3804 , ["System.Title"]).then(function(workItems) {
