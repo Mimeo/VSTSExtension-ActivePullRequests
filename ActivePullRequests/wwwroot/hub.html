@@ -27,33 +27,66 @@
             "VSS/Service", "TFS/VersionControl/GitRestClient"],
             function (Controls, Grids, VSS_Service, TFS_Git_WebApi) {
 
-                // Get a WIT client to make REST calls to VSTS
-                // var workClient = VSS_Service.getCollectionClient(TFS_Work_WebApi.WorkItemTrackingHttpClient);
-                var gitClient = TFS_Git_WebApi.getClient();
-
-                // Spit out the project name to console just to see if we can get some info
-                var projectName = VSS.getWebContext().project.name;
-
-                // Call the "getRepositories" REST endpoint, giving a query ID
-                gitClient.getRepositories(projectName, true).then(function(repos) {
-                    console.log("Count: " + repos.length);
-                    var newTitleText = $("#hub-title").text() + " (" + repos.length + ")"
-                    $("#hub-title").text(newTitleText);
-                    
-                    // Create a Grid control to display the repos
-                    Controls.create(Grids.Grid, $("#grid-container"), {
+                // Create a Grid control to display the repos
+                var grid = Controls.create(Grids.Grid, $("#grid-container"), {
                         height: "1000px", // Explicit height is required for a Grid control
                         columns: [
                             // text is the column header text. 
                             // index is the key into the source object to find the data for this column
                             // width is the width of the column, in pixels
                             { text: "id", index: "id", width: 150 },
-                            { text: "name", index: "name", width: 150 },
-                            { text: "url", index: "url", width: 600 }
+                            { text: "title", index: "title", width: 150 },
+                            { text: "repo", index: "repoName", width: 600 }
                         ],
                         // This data source is rendered into the Grid columns defined above
-                        source: repos
-                    });                 
+                        source: [{
+                            id: "Loading...",
+                            title: "Loading...",
+                            repo: "Loading..."
+                        }]
+                });                 
+
+                // Get a client to make REST calls to VSTS
+                var gitClient = TFS_Git_WebApi.getClient();
+
+                // Save the project name to be used later for repository querying
+                var projectName = VSS.getWebContext().project.name;
+
+                // Call the "getRepositories" REST endpoint, giving a query ID
+                gitClient.getRepositories(projectName, true).then(function(repos) {
+                    console.log(repos);
+                    console.log("Total repositories in project: " + repos.length);
+                    
+                    var repositories = [];
+                    var activePullRequests = [];
+                    
+                    for(index = 0; index < repos.length - 1; index++) {
+                        repositories[repos[index].id] = {
+                            name: repos[index].name,
+                            remoteUrl: repos[index].remoteUrl
+                        };
+                        
+                        gitClient.getPullRequests(repos[index].id, {
+                            status: "Active"
+                        }).then(function(prs) {
+                            if(prs.length > 0) {
+                                prs.forEach(function(p) {
+                                    console.log(p);
+                                    console.log("Pull Request " + p.pullRequestId + " - " + p.title + " in " + repositories[p.repository.id].name);
+                                    activePullRequests[p.id] = {
+                                        id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
+                                        title: "<a href='" + p.url + "'>" + p.title + "</a>",
+                                        repo: "<a href='" + repositories[p.repository.id].remoteUrl + "'>" + repositories[p.repository.id].name + "</a>"
+                                    };
+                                    
+                                    grid.setDataSource(activePullRequests);
+                                });
+                            }
+                        });
+                    }
+                    
+                    //var newTitleText = $("#hub-title").text() + " (" + activePullRequests.length + ")"
+                    //$("#hub-title").text(newTitleText);
                 });
 
                 VSS.notifyLoadSucceeded();
