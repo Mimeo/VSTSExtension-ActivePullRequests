@@ -1,7 +1,7 @@
 ﻿{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "name": "Mimeo VSTS Extensions",
   "description": "Extensions for VSTS",
   "publisher": "mimeo",
@@ -22,14 +22,14 @@
         "ms.vss-code-web.code-hub-group"
       ],
       "properties": {
-        "name": "Testing (Do not use)",
+        "name": "All Active Pull Requests",
         "order": 100,
         "uri": "ActivePullRequests/wwwroot/hub.html"
       }
     }
   ],
   "scopes": [
-      "vso.work"
+      "vso.code"
   ],
   "files": [
       {

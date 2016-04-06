@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <h1>Hello Visual Studio Team Services!</h1>
+    <div id="hub-title" title="All Repositories" style="font-size: 18px;font-weight: 200; font-family: Segoe UI,Arial,Verdana,Helvetica Neue,Helvetica;">All Repositories</div>
     <div id="grid-container"></div>
 
     <script type="text/javascript">
@@ -21,46 +21,43 @@
             usePlatformScripts: true,
             usePlatformStyles: true
         });
-
+           
         // Load Team Services controls
         VSS.require(["VSS/Controls", "VSS/Controls/Grids",
-            "VSS/Service", "TFS/WorkItemTracking/RestClient"],
-            function (Controls, Grids, VSS_Service, TFS_Work_WebApi) {
+            "VSS/Service", "TFS/VersionControl/GitRestClient"],
+            function (Controls, Grids, VSS_Service, TFS_Git_WebApi) {
 
                 // Get a WIT client to make REST calls to VSTS
                 // var workClient = VSS_Service.getCollectionClient(TFS_Work_WebApi.WorkItemTrackingHttpClient);
-                var workClient = TFS_Work_WebApi.getClient();
+                var gitClient = TFS_Git_WebApi.getClient();
 
-// Spit out the project name to console just to see if we can get some info
-console.log(VSS.getWebContext().project.name);
+                // Spit out the project name to console just to see if we can get some info
+                var projectName = VSS.getWebContext().project.name;
 
-                // Call the "queryById" REST endpoint, giving a query ID
-                workClient.getWorkItems([3804] , ["System.Title"]).then(function(workItems) {
-                    // Create a Grid control to display the Work Items
+                // Call the "getRepositories" REST endpoint, giving a query ID
+                gitClient.getRepositories(projectName, true).then(function(repos) {
+                    console.log("Count: " + repos.length);
+                    var newTitleText = $("#hub-title").text() + " (" + repos.length + ")"
+                    $("#hub-title").text(newTitleText);
+                    
+                    // Create a Grid control to display the repos
                     Controls.create(Grids.Grid, $("#grid-container"), {
                         height: "1000px", // Explicit height is required for a Grid control
                         columns: [
                             // text is the column header text. 
                             // index is the key into the source object to find the data for this column
                             // width is the width of the column, in pixels
-                            { text: "Work Item ID", index: "id", width: 150 },
-
-                            // getColumnValue provides a mechanism for the grid to get the data for a cell
-                            // (at the given row number) if it is not directly keyed off the source object.
-                            { text: "Title", width: 150, getColumnValue: function(dataIndex) { 
-                                // The Work Item's Title is at source[row].fields["System.Title"].
-                                // this.getRowData(n) returns the nth item from the source object, so we 
-                                // can return the "System.Title" property under fields.
-                                return this.getRowData(dataIndex).fields["System.Title"]; 
-                            } },
-                            { text: "URL", index: "url", width: 600 }
+                            { text: "id", index: "id", width: 150 },
+                            { text: "name", index: "name", width: 150 },
+                            { text: "url", index: "url", width: 600 }
                         ],
                         // This data source is rendered into the Grid columns defined above
-                        source: workItems
+                        source: repos
                     });                 
                 });
+
                 VSS.notifyLoadSucceeded();
-            });
+            });            
     </script>
 </body>
 
