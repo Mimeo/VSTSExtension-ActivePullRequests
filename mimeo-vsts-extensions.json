@@ -1,0 +1,45 @@
+﻿{
+  "manifestVersion": 1,
+  "id": "mimeo-active-pull-requests",
+  "version": "0.1.2",
+  "name": "Mimeo VSTS Extensions",
+  "description": "Extensions for VSTS",
+  "publisher": "mimeo",
+  "targets": [
+      {
+        "id" : "Microsoft.VisualStudio.Services"  
+      }
+  ],
+  "icons": {
+      "default": "images/logo.png"
+  },
+  "contributions": [
+    {
+      "id": "active-pull-requests-extension-hub",
+      "type": "ms.vss-web.hub",
+      "description": "View all active pull requests across all repos in a team.",
+      "targets": [
+        "ms.vss-code-web.code-hub-group"
+      ],
+      "properties": {
+        "name": "Testing (Do not use)",
+        "order": 100,
+        "uri": "ActivePullRequests/wwwroot/hub.html"
+      }
+    }
+  ],
+  "scopes": [
+      "vso.work"
+  ],
+  "files": [
+      {
+          "path": "ActivePullRequests/wwwroot/hub.html", "addressable" : "true"
+      },
+      {
+          "path": "ActivePullRequests/wwwroot/sdk/scripts", "addressable" : "true"
+      },
+      {
+          "path": "images/logo.png", "addressable" : "true"
+      }
+  ]
+}

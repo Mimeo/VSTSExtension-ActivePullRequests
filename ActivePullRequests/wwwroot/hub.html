@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Hello Visual Studio Team Services!</title>
+    <script src="sdk/scripts/VSS.SDK.js"></script>
+</head>
+
+<body>
+    <h1>Hello Visual Studio Team Services!</h1>
+    <div id="grid-container"></div>
+
+    <script type="text/javascript">
+        // Sets up the initial handshake with the host frame
+        VSS.init({
+            // Our extension will explicitly notify the host when we're done loading
+            explicitNotifyLoaded: true,
+
+            // We are using some VSO APIs, so we will need the module loader to load them in
+            usePlatformScripts: true,
+            usePlatformStyles: true
+        });
+
+        // Load Team Services controls
+        VSS.require(["VSS/Controls", "VSS/Controls/Grids",
+            "VSS/Service", "TFS/WorkItemTracking/RestClient"],
+            function (Controls, Grids, VSS_Service, TFS_Work_WebApi) {
+
+                // Get a WIT client to make REST calls to VSTS
+                // var workClient = VSS_Service.getCollectionClient(TFS_Work_WebApi.WorkItemTrackingHttpClient);
+                var workClient = TFS_Work_WebApi.getClient();
+
+console.log(VSS.getWebContext().project.name);
+console.log(VSS.getAccessToken());
+
+                // Call the "queryById" REST endpoint, giving a query ID
+                workClient.getWorkItem(3804 , ["System.Title"]).then(function(workItems) {
+                    // Create a Grid control to display the Work Items
+                    Controls.create(Grids.Grid, $("#grid-container"), {
+                        height: "1000px", // Explicit height is required for a Grid control
+                        columns: [
+                            // text is the column header text. 
+                            // index is the key into the source object to find the data for this column
+                            // width is the width of the column, in pixels
+                            { text: "Work Item ID", index: "id", width: 150 },
+
+                            // getColumnValue provides a mechanism for the grid to get the data for a cell
+                            // (at the given row number) if it is not directly keyed off the source object.
+                            { text: "Title", width: 150, getColumnValue: function(dataIndex) { 
+                                // The Work Item's Title is at source[row].fields["System.Title"].
+                                // this.getRowData(n) returns the nth item from the source object, so we 
+                                // can return the "System.Title" property under fields.
+                                return this.getRowData(dataIndex).fields["System.Title"]; 
+                            } },
+                            { text: "URL", index: "url", width: 600 }
+                        ],
+                        // This data source is rendered into the Grid columns defined above
+                        source: workItems
+                    });                 
+                });
+                VSS.notifyLoadSucceeded();
+            });
+    </script>
+</body>
+
+</html>
