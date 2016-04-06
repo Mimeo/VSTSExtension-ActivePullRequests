@@ -35,7 +35,7 @@
 console.log(VSS.getWebContext().project.name);
 
                 // Call the "queryById" REST endpoint, giving a query ID
-                workClient.getWorkItem(3804 , ["System.Title"]).then(function(workItems) {
+                workClient.getWorkItems([3804] , ["System.Title"]).then(function(workItems) {
                     // Create a Grid control to display the Work Items
                     Controls.create(Grids.Grid, $("#grid-container"), {
                         height: "1000px", // Explicit height is required for a Grid control
