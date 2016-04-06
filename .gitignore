@@ -73,6 +73,9 @@ ipch/
 # Visual Studio Code files
 .vscode/
 
+# Visual Studio Extensions
+*.vsix
+
 # TFS 2012 Local Workspace
 $tf/
 
@@ -180,3 +183,5 @@ dist/
 tmp/
 
 .idea/
+
+*.lock.json
