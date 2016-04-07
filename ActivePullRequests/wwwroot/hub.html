@@ -54,7 +54,6 @@
 
                 // Call the "getRepositories" REST endpoint, giving a query ID
                 gitClient.getRepositories(projectName, true).then(function(repos) {
-                    console.log(repos);
                     console.log("Total repositories in project: " + repos.length);
                     
                     var repositories = [];
@@ -71,8 +70,7 @@
                         }).then(function(prs) {
                             if(prs.length > 0) {
                                 prs.forEach(function(p) {
-                                    console.log(p);
-                                    console.log("Pull Request " + p.pullRequestId + " - " + p.title + " in " + repositories[p.repository.id].name);
+                                    //console.log(p);
                                     activePullRequests.push({
                                         // id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
                                         // title: "<a href='" + p.url + "'>" + p.title + "</a>",
@@ -86,10 +84,7 @@
                                 });
                             }
                         });
-                    }
-                    
-                    //var newTitleText = $("#hub-title").text() + " (" + activePullRequests.length + ")"
-                    //$("#hub-title").text(newTitleText);
+                    }                    
                 });
 
                 VSS.notifyLoadSucceeded();
