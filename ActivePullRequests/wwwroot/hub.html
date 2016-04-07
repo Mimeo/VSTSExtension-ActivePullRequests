@@ -34,9 +34,9 @@
                             // text is the column header text. 
                             // index is the key into the source object to find the data for this column
                             // width is the width of the column, in pixels
-                            { text: "id", index: "id", width: 150 },
-                            { text: "title", index: "title", width: 150 },
-                            { text: "repo", index: "repoName", width: 600 }
+                            { text: "Id", index: "id", width: 150 },
+                            { text: "Title", index: "title", width: 600 },
+                            { text: "Repository", index: "repo", width: 400 }
                         ],
                         // This data source is rendered into the Grid columns defined above
                         source: [{
@@ -73,12 +73,15 @@
                                 prs.forEach(function(p) {
                                     console.log(p);
                                     console.log("Pull Request " + p.pullRequestId + " - " + p.title + " in " + repositories[p.repository.id].name);
-                                    activePullRequests[p.id] = {
-                                        id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
-                                        title: "<a href='" + p.url + "'>" + p.title + "</a>",
-                                        repo: "<a href='" + repositories[p.repository.id].remoteUrl + "'>" + repositories[p.repository.id].name + "</a>"
-                                    };
-                                    
+                                    activePullRequests.push({
+                                        // id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
+                                        // title: "<a href='" + p.url + "'>" + p.title + "</a>",
+                                        // repo: "<a href='" + repositories[p.repository.id].remoteUrl + "'>" + repositories[p.repository.id].name + "</a>"
+                                        id: "Pull Request " + p.pullRequestId,
+                                        title: p.title,
+                                        repo: repositories[p.repository.id].name
+                                    });
+                                    console.log(activePullRequests);
                                     grid.setDataSource(activePullRequests);
                                 });
                             }
