@@ -1,4 +1,12 @@
-# mimeo-vsts-extensions
+![Pull Request](/images/pullRequest.png)
+# VSTSExtension-ActivePullRequests
 
-Visual Studio Team Services Extensions for Mimeo
+Visual Studio Team Services extension to view all active pull requests across all repositories for a team project.
+
+## Contribute
+Check out the [contribution guidelines](CONTRIBUTING.md)
+if you want to contribute to this project.
+
+### Credits
+Icon - pull request by Richard Slater from the Noun Project [Richard Slater](https://thenounproject.com/term/pull-request/116189/)
 

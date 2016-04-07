@@ -88,9 +88,21 @@
                         });
                     }                    
                 });
+                
+                window.setTimeout( () => {
+                    prCount = activePullRequests.length;
+                    if(prCount === 0) {
+                        grid.setDataSource([{
+                            id: "",
+                            title: "",
+                            repo: ""
+                        }]);
+                    } 
+                    $("#hub-title").text($("#hub-title").text() + " (" + prCount + " pull requests)");
+                }, 5000);
 
                 VSS.notifyLoadSucceeded();
-            });            
+            });
     </script>
 </body>
 

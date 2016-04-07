@@ -1,9 +1,9 @@
 ﻿{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "0.1.4",
-  "name": "Mimeo VSTS Extensions",
-  "description": "Extensions for VSTS",
+  "version": "0.1.5",
+  "name": "Active Pull Requests",
+  "description": "View all active pull requests across all repos in a team.",
   "publisher": "mimeo",
   "targets": [
       {
@@ -11,7 +11,7 @@
       }
   ],
   "icons": {
-      "default": "images/logo.png"
+      "default": "images/pullRequest.png"
   },
   "contributions": [
     {
@@ -24,7 +24,7 @@
       "properties": {
         "name": "All Active Pull Requests",
         "order": 100,
-        "uri": "ActivePullRequests/wwwroot/hub.html"
+        "uri": "wwwroot/hub.html"
       }
     }
   ],
@@ -33,10 +33,10 @@
   ],
   "files": [
       {
-          "path": "ActivePullRequests/wwwroot/hub.html", "addressable" : "true"
+          "path": "wwwroot/hub.html", "addressable" : "true"
       },
       {
-          "path": "ActivePullRequests/wwwroot/sdk/scripts", "addressable" : "true"
+          "path": "wwwroot/sdk/scripts", "addressable" : "true"
       },
       {
           "path": "images/logo.png", "addressable" : "true"
