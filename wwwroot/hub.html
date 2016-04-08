@@ -63,6 +63,7 @@
                                             return $("<div class='grid-cell'/>")
                                                 .html($("<a/>")
                                                     .attr("href", hostUri + projectName +"/_git/" + activePullRequest.repo + "/pullRequest/" + activePullRequest.id)
+                                                    .attr("target", "_top")
                                                     .text("Pull Request " + activePullRequest.id));
                                         }
                                     } 
