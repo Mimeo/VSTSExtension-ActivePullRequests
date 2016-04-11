@@ -53,9 +53,9 @@
                                     indentIndex, 
                                     columnOrder) {
                                         var prid = this.getColumnValue(dataIndex, column.index);
-                                        if(prid == "") {
+                                        if(prid === "Loading..." || prid === "") {
                                             return $("<div class='grid-cell'/>")
-                                                .text("Loading...");
+                                                .text(prid);
                                         } else {
                                             var activePullRequest = activePullRequests.find(function(element, index, array) {
                                                 return element.id == prid
@@ -81,7 +81,7 @@
                         ],
                         // This data source is rendered into the Grid columns defined above
                         source: [{
-                            id: "",
+                            id: "Loading...",
                             title: "Loading...",
                             repo: "Loading..."
                         }]                      
