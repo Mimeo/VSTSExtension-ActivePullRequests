@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <title>Active Pull Requests</title>
     <script src="sdk/scripts/VSS.SDK.js"></script>
+    <script src="sdk/scripts/q.js"></script>
 </head>
 
 <body>
@@ -24,8 +25,8 @@
            
         // Load Team Services controls
         VSS.require(["VSS/Controls", "VSS/Controls/Grids",
-            "VSS/Service", "TFS/VersionControl/GitRestClient"],
-            function (Controls, Grids, VSS_Service, TFS_Git_WebApi) {
+            "VSS/Service", "TFS/VersionControl/GitRestClient", "q"],
+            function (Controls, Grids, VSS_Service, TFS_Git_WebApi, Q) {
 
                 var activePullRequests = [];
 
@@ -89,41 +90,30 @@
 
                 // Get a client to make REST calls to VSTS
                 var gitClient = TFS_Git_WebApi.getClient();
-
+                
                 // Call the "getRepositories" REST endpoint, giving a query ID
-                gitClient.getRepositories(projectName, true).then(function(repos) {
-                    console.log("Total repositories in project: " + repos.length);
-                    
-                    var repositories = [];
-                    
-                    for(index = 0; index < repos.length; index++) {
-                        repositories[repos[index].id] = {
-                            name: repos[index].name,
-                            remoteUrl: repos[index].remoteUrl
-                        };
-                        
-                        gitClient.getPullRequests(repos[index].id, {
-                            status: "Active"
-                        }).then(function(prs) {
-                            if(prs.length > 0) {
-                                prs.forEach(function(p) {
-                                    //console.log(p);
-                                    activePullRequests.push({
-                                        // id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
-                                        // title: "<a href='" + p.url + "'>" + p.title + "</a>",
-                                        // repo: "<a href='" + repositories[p.repository.id].remoteUrl + "'>" + repositories[p.repository.id].name + "</a>"
-                                        id: p.pullRequestId,
-                                        url: p.url,
-                                        title: p.title,
-                                        repo: repositories[p.repository.id].name
-                                    });
-                                    console.log(activePullRequests);
-                                    grid.setDataSource(activePullRequests);
+                gitClient.getRepositories(projectName, true)
+                    .then(function (repos) {
+                        console.log("Total repos in " + projectName + ": " + repos.length);  
+                        var prs = [];
+                        repos.forEach(function (r) {
+                            //console.log("Repo " + r.name);
+                            gitClient.getPullRequests(r.id, { status: "Active" })
+                                .then(function (prs) {
+                                    if(prs.length > 0) {
+                                        prs.forEach(function(p) {
+                                            activePullRequests.push({
+                                                id: p.pullRequestId,
+                                                url: p.url,
+                                                title: p.title,
+                                                repo: r.name
+                                            });
+                                            grid.setDataSource(activePullRequests);
+                                        });
+                                    }
                                 });
-                            }
                         });
-                    }                    
-                });
+                    });
                 
                 window.setTimeout( () => {
                     prCount = activePullRequests.length;
