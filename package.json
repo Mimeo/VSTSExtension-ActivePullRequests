@@ -4,6 +4,6 @@
 	"private": true,
   "devDependencies": {
     "gulp": "3.9.0",
-    "vss-sdk": "0.91.1"
+    "vss-web-extension-sdk": "1.97.0"
   }
 }

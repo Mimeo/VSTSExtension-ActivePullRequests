@@ -13,4 +13,6 @@ gulp.task('default', function () {
 gulp.task('vss-sdk', function () {
     gulp.src('./node_modules/vss-web-extension-sdk/lib/*.js')
         .pipe(gulp.dest('./wwwroot/sdk/scripts'));
+    gulp.src('./node_modules/q/*.js')
+        .pipe(gulp.dest('./wwwroot/sdk/scripts'));
 });

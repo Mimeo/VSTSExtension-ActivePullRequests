@@ -3,8 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Hello Visual Studio Team Services!</title>
+    <title>Active Pull Requests</title>
     <script src="sdk/scripts/VSS.SDK.js"></script>
+    <script src="sdk/scripts/q.js"></script>
 </head>
 
 <body>
@@ -24,14 +25,18 @@
            
         // Load Team Services controls
         VSS.require(["VSS/Controls", "VSS/Controls/Grids",
-            "VSS/Service", "TFS/VersionControl/GitRestClient"],
-            function (Controls, Grids, VSS_Service, TFS_Git_WebApi) {
+            "VSS/Service", "TFS/VersionControl/GitRestClient", "q"],
+            function (Controls, Grids, VSS_Service, TFS_Git_WebApi, Q) {
 
                 var activePullRequests = [];
 
                 // Save the project name to be used later for repository querying
-                var projectName = VSS.getWebContext().project.name;
-                var hostUri = VSS.getWebContext().host.uri;
+                var webContext = VSS.getWebContext();
+                var projectName = webContext.project.name;
+                var hostUri = webContext.host.uri;
+                var user = webContext.user;
+                
+                console.log("UserId: " + user.id + " - UserName: " + user.name);
 
                 // Create a Grid control to display the repos
                 var grid = Controls.create(Grids.Grid, $("#grid-container"), {
@@ -53,9 +58,9 @@
                                     indentIndex, 
                                     columnOrder) {
                                         var prid = this.getColumnValue(dataIndex, column.index);
-                                        if(prid == "") {
+                                        if(prid === "Loading..." || prid === "") {
                                             return $("<div class='grid-cell'/>")
-                                                .text("Loading...");
+                                                .text(prid);
                                         } else {
                                             var activePullRequest = activePullRequests.find(function(element, index, array) {
                                                 return element.id == prid
@@ -77,53 +82,91 @@
                                 text: "Repository", 
                                 index: "repo", 
                                 width: 400 
+                            },
+                            { 
+                                text: "My Vote", 
+                                index: "vote", 
+                                width: 100,
+                                getCellContents: function (
+                                    rowInfo, 
+                                    dataIndex, 
+                                    expandedState, 
+                                    level, 
+                                    column, 
+                                    indentIndex, 
+                                    columnOrder) {
+                                        var vote = this.getColumnValue(dataIndex, column.index);
+                                        var voteString;
+                                        switch(vote) {
+                                            case "":
+                                            case "Loading...":
+                                                voteString = vote;
+                                                break;
+                                            case -5:
+                                                voteString = "Waiting for the author";
+                                                break;    
+                                            case 5:
+                                                voteString = "Approved with suggestions";
+                                                break;
+                                            case 10:
+                                                voteString = "Approved";
+                                                break;
+                                            default: 
+                                                voteString = "No Response";
+                                        }
+                                        return $("<div class='grid-cell'/>")
+                                            .text(voteString);
+                                    } 
                             }
                         ],
                         // This data source is rendered into the Grid columns defined above
                         source: [{
-                            id: "",
+                            id: "Loading...",
                             title: "Loading...",
-                            repo: "Loading..."
+                            repo: "Loading...",
+                            vote: "Loading..."
                         }]                      
                 });                 
 
                 // Get a client to make REST calls to VSTS
                 var gitClient = TFS_Git_WebApi.getClient();
-
+                
                 // Call the "getRepositories" REST endpoint, giving a query ID
-                gitClient.getRepositories(projectName, true).then(function(repos) {
-                    console.log("Total repositories in project: " + repos.length);
-                    
-                    var repositories = [];
-                    
-                    for(index = 0; index < repos.length - 1; index++) {
-                        repositories[repos[index].id] = {
-                            name: repos[index].name,
-                            remoteUrl: repos[index].remoteUrl
-                        };
-                        
-                        gitClient.getPullRequests(repos[index].id, {
-                            status: "Active"
-                        }).then(function(prs) {
-                            if(prs.length > 0) {
-                                prs.forEach(function(p) {
-                                    //console.log(p);
-                                    activePullRequests.push({
-                                        // id: "<a href='" + p.url + "'>Pull Request " + p.pullRequestId + "</a>",
-                                        // title: "<a href='" + p.url + "'>" + p.title + "</a>",
-                                        // repo: "<a href='" + repositories[p.repository.id].remoteUrl + "'>" + repositories[p.repository.id].name + "</a>"
-                                        id: p.pullRequestId,
-                                        url: p.url,
-                                        title: p.title,
-                                        repo: repositories[p.repository.id].name
-                                    });
-                                    console.log(activePullRequests);
-                                    grid.setDataSource(activePullRequests);
+                gitClient.getRepositories(projectName, true)
+                    .then(function (repos) {
+                        console.log("Total repos in " + projectName + ": " + repos.length);  
+                        var prs = [];
+                        repos.forEach(function (r) {
+                            //console.log("Repo " + r.name);
+                            gitClient.getPullRequests(r.id, { status: "Active" })
+                                .then(function (prs) {
+                                    if(prs.length > 0) {
+                                        prs.forEach(function(p) {
+                                            gitClient.getPullRequestReviewers(r.id, p.pullRequestId, projectName)
+                                                .then(function (reviewers) {
+                                                    console.log(reviewers);
+                                                    var userVote = -1;
+                                                    var isUserAReviewer = reviewers.filter(function(e) {
+                                                        return e.id==user.id
+                                                    });
+                                                    
+                                                    if(isUserAReviewer.length > 0) {
+                                                        userVote = isUserAReviewer[0].vote;
+                                                    }
+                                                    activePullRequests.push({
+                                                        id: p.pullRequestId,
+                                                        url: p.url,
+                                                        title: p.title,
+                                                        repo: r.name,
+                                                        vote: userVote
+                                                    });
+                                                    grid.setDataSource(activePullRequests);
+                                                });
+                                            });
+                                    }
                                 });
-                            }
                         });
-                    }                    
-                });
+                    });
                 
                 window.setTimeout( () => {
                     prCount = activePullRequests.length;
@@ -131,7 +174,8 @@
                         grid.setDataSource([{
                             id: "",
                             title: "",
-                            repo: ""
+                            repo: "",
+                            vote: ""
                         }]);
                     } 
                     $("#hub-title").text($("#hub-title").text() + " (" + prCount + " pull requests)");
