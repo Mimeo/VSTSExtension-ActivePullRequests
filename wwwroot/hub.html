@@ -60,12 +60,14 @@
                                         var prid = this.getColumnValue(dataIndex, column.index);
                                         if(prid === "Loading..." || prid === "") {
                                             return $("<div class='grid-cell'/>")
+                                                .width(column.width || 150)
                                                 .text(prid);
                                         } else {
                                             var activePullRequest = activePullRequests.find(function(element, index, array) {
                                                 return element.id == prid
                                             });
                                             return $("<div class='grid-cell'/>")
+                                                .width(column.width || 150)
                                                 .html($("<a/>")
                                                     .attr("href", hostUri + projectName +"/_git/" + activePullRequest.repo + "/pullRequest/" + activePullRequest.id)
                                                     .attr("target", "_top")
@@ -76,17 +78,17 @@
                             { 
                                 text: "Title", 
                                 index: "title", 
-                                width: 600 
+                                width: 450 
                             },
                             { 
                                 text: "Repository", 
                                 index: "repo", 
-                                width: 400 
+                                width: 200 
                             },
                             { 
                                 text: "My Vote", 
                                 index: "vote", 
-                                width: 100,
+                                width: 200,
                                 getCellContents: function (
                                     rowInfo, 
                                     dataIndex, 
@@ -97,25 +99,44 @@
                                     columnOrder) {
                                         var vote = this.getColumnValue(dataIndex, column.index);
                                         var voteString;
+                                        var content = $("<div class='grid-cell'/>");
                                         switch(vote) {
                                             case "":
                                             case "Loading...":
                                                 voteString = vote;
                                                 break;
+                                            case -10:
+                                                voteString = "Rejected";
+                                                content.append("<span class='bowtie-icon bowtie-status-failure'/>");
+                                                break;
                                             case -5:
                                                 voteString = "Waiting for the author";
+                                                content.append("<span class='bowtie-icon bowtie-status-waiting-fill'/>");
+                                                break;
+                                            case -1:
+                                                voteString = "No Response (not required)";
+                                                content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
+                                                content.css("color", "gray");
+                                                break;    
+                                            case 0:
+                                                voteString = "Response Required";
+                                                content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
+                                                content.css("color", "red")
                                                 break;    
                                             case 5:
                                                 voteString = "Approved with suggestions";
+                                                content.append("<span class='bowtie-icon bowtie-status-success' />");
                                                 break;
                                             case 10:
                                                 voteString = "Approved";
+                                                content.append("<span class='bowtie-icon bowtie-status-success' />");                                                
                                                 break;
                                             default: 
-                                                voteString = "No Response";
+                                                voteString = vote;
                                         }
-                                        return $("<div class='grid-cell'/>")
-                                            .text(voteString);
+                                        return content
+                                                    .width(column.width || 200)
+                                                    .append("<span class='vc-pullrequest-view-details-action-text' style='padding-left: 2px'>" + voteString + "</span>");
                                     } 
                             }
                         ],
@@ -125,7 +146,8 @@
                             title: "Loading...",
                             repo: "Loading...",
                             vote: "Loading..."
-                        }]                      
+                        }],
+                        useBowtieStyle: true                      
                 });                 
 
                 // Get a client to make REST calls to VSTS
