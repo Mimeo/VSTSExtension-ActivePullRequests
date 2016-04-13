@@ -31,8 +31,12 @@
                 var activePullRequests = [];
 
                 // Save the project name to be used later for repository querying
-                var projectName = VSS.getWebContext().project.name;
-                var hostUri = VSS.getWebContext().host.uri;
+                var webContext = VSS.getWebContext();
+                var projectName = webContext.project.name;
+                var hostUri = webContext.host.uri;
+                var user = webContext.user;
+                
+                console.log("UserId: " + user.id + " - UserName: " + user.name);
 
                 // Create a Grid control to display the repos
                 var grid = Controls.create(Grids.Grid, $("#grid-container"), {
@@ -78,13 +82,49 @@
                                 text: "Repository", 
                                 index: "repo", 
                                 width: 400 
+                            },
+                            { 
+                                text: "My Vote", 
+                                index: "vote", 
+                                width: 100,
+                                getCellContents: function (
+                                    rowInfo, 
+                                    dataIndex, 
+                                    expandedState, 
+                                    level, 
+                                    column, 
+                                    indentIndex, 
+                                    columnOrder) {
+                                        var vote = this.getColumnValue(dataIndex, column.index);
+                                        var voteString;
+                                        switch(vote) {
+                                            case "":
+                                            case "Loading....":
+                                                voteString = vote;
+                                                break;
+                                            case -5:
+                                                voteString = "Waiting for the author";
+                                                break;    
+                                            case 5:
+                                                voteString = "Approved with suggestions";
+                                                break;
+                                            case 10:
+                                                voteString = "Approved";
+                                                break;
+                                            default: 
+                                                voteString = "No Response";
+                                        }
+                                        return $("<div class='grid-cell'/>")
+                                            .text(voteString);
+                                    } 
                             }
                         ],
                         // This data source is rendered into the Grid columns defined above
                         source: [{
                             id: "Loading...",
                             title: "Loading...",
-                            repo: "Loading..."
+                            repo: "Loading...",
+                            vote: "Loading..."
                         }]                      
                 });                 
 
@@ -102,14 +142,27 @@
                                 .then(function (prs) {
                                     if(prs.length > 0) {
                                         prs.forEach(function(p) {
-                                            activePullRequests.push({
-                                                id: p.pullRequestId,
-                                                url: p.url,
-                                                title: p.title,
-                                                repo: r.name
+                                            gitClient.getPullRequestReviewers(r.id, p.pullRequestId, projectName)
+                                                .then(function (reviewers) {
+                                                    console.log(reviewers);
+                                                    var userVote = -1;
+                                                    var isUserAReviewer = reviewers.filter(function(e) {
+                                                        return e.id==user.id
+                                                    });
+                                                    
+                                                    if(isUserAReviewer.length > 0) {
+                                                        userVote = isUserAReviewer[0].vote;
+                                                    }
+                                                    activePullRequests.push({
+                                                        id: p.pullRequestId,
+                                                        url: p.url,
+                                                        title: p.title,
+                                                        repo: r.name,
+                                                        vote: userVote
+                                                    });
+                                                    grid.setDataSource(activePullRequests);
+                                                });
                                             });
-                                            grid.setDataSource(activePullRequests);
-                                        });
                                     }
                                 });
                         });
@@ -121,7 +174,8 @@
                         grid.setDataSource([{
                             id: "",
                             title: "",
-                            repo: ""
+                            repo: "",
+                            vote: ""
                         }]);
                     } 
                     $("#hub-title").text($("#hub-title").text() + " (" + prCount + " pull requests)");

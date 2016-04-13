@@ -1,7 +1,7 @@
 ﻿{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "name": "Active Pull Requests",
   "description": "View all active pull requests across all repos in a team.",
   "publisher": "mimeo",
