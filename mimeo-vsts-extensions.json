@@ -1,10 +1,11 @@
 ﻿{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "0.2.2",
+  "publisher": "mimeo",
+  "version": "0.2.3",
   "name": "Active Pull Requests",
   "description": "View all active pull requests across all repos in a team.",
-  "publisher": "mimeo",
+  "public": "true",
   "targets": [
       {
         "id" : "Microsoft.VisualStudio.Services"  
@@ -12,6 +13,45 @@
   ],
   "icons": {
       "default": "images/pullRequest.png"
+  },
+  "categories": [
+      "Code"
+  ],
+  "tags": [
+      "pullrequest",
+      "pullrequests",
+      "pull-request",  
+      "pull-requests",
+      "code",
+      "code-review"  
+  ],
+  "screenshots": [
+      {
+          "path": "images/screenshot_sm.png"
+      },  
+      {
+          "path": "images/screenshot.png"
+      }  
+  ],
+  "content": {
+      "details": {
+          "path": "overview.md"
+      },
+      "license": {
+          "path": "LICENSE"
+      }
+  },
+  "links": {
+      "learn": {
+          "uri": "https://github.com/mimeo/vstSExtension-ActivePullRequests/"
+      },  
+      "support": {
+          "uri": "https://github.com/mimeo/vstSExtension-ActivePullRequests/issues"
+      }
+  },
+  "branding": {
+      "color": "#3F99D3",
+      "theme": "light"  
   },
   "contributions": [
     {
