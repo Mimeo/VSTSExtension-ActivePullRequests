@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
   "publisher": "mimeo",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "name": "Active Pull Requests",
   "description": "View all active pull requests across all repos in a team.",
   "public": true,
@@ -69,7 +69,8 @@
     }
   ],
   "scopes": [
-      "vso.code"
+      "vso.code",
+      "vso.profile"
   ],
   "files": [
       {
