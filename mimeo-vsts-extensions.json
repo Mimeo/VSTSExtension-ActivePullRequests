@@ -2,10 +2,10 @@
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
   "publisher": "mimeo",
-  "version": "0.2.3",
+  "version": "0.2.6",
   "name": "Active Pull Requests",
   "description": "View all active pull requests across all repos in a team.",
-  "public": "true",
+  "public": true,
   "targets": [
       {
         "id" : "Microsoft.VisualStudio.Services"  
@@ -69,7 +69,8 @@
     }
   ],
   "scopes": [
-      "vso.code"
+      "vso.code",
+      "vso.profile"
   ],
   "files": [
       {

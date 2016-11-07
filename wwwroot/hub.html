@@ -13,6 +13,33 @@
     <div id="grid-container"></div>
 
     <script type="text/javascript">
+        // Polyfill for IE
+        if (!Array.prototype.find) {
+            Object.defineProperty(Array.prototype, 'find', {
+                value: function(predicate) {
+                    'use strict';
+                    if (this == null) {
+                        throw new TypeError('Array.prototype.find called on null or undefined');
+                    }
+                    if (typeof predicate !== 'function') {
+                        throw new TypeError('predicate must be a function');
+                    }
+                    var list = Object(this);
+                    var length = list.length >>> 0;
+                    var thisArg = arguments[1];
+                    var value;
+
+                    for (var i = 0; i < length; i++) {
+                        value = list[i];
+                        if (predicate.call(thisArg, value, i, list)) {
+                            return value;
+                        }
+                    }
+                    return undefined;
+                }
+            });
+        }
+
         // Sets up the initial handshake with the host frame
         VSS.init({
             // Our extension will explicitly notify the host when we're done loading
@@ -190,7 +217,7 @@
                         });
                     });
                 
-                window.setTimeout( () => {
+                window.setTimeout( function() {
                     prCount = activePullRequests.length;
                     if(prCount === 0) {
                         grid.setDataSource([{
