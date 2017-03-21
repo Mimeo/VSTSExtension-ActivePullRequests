@@ -16,7 +16,7 @@
         // Polyfill for IE
         if (!Array.prototype.find) {
             Object.defineProperty(Array.prototype, 'find', {
-                value: function(predicate) {
+                value: function (predicate) {
                     'use strict';
                     if (this == null) {
                         throw new TypeError('Array.prototype.find called on null or undefined');
@@ -49,7 +49,7 @@
             usePlatformScripts: true,
             usePlatformStyles: true
         });
-           
+
         // Load Team Services controls
         VSS.require(["VSS/Controls", "VSS/Controls/Grids",
             "VSS/Service", "TFS/VersionControl/GitRestClient", "q"],
@@ -62,147 +62,176 @@
                 var projectName = webContext.project.name;
                 var hostUri = webContext.host.uri;
                 var user = webContext.user;
-                
+
                 console.log("UserId: " + user.id + " - UserName: " + user.name);
 
                 // Create a Grid control to display the repos
                 var grid = Controls.create(Grids.Grid, $("#grid-container"), {
-                        height: "1000px", // Explicit height is required for a Grid control
-                        columns: [
-                            // text is the column header text. 
-                            // index is the key into the source object to find the data for this column
-                            // width is the width of the column, in pixels
-                            { 
-                                text: "Id", 
-                                index: "id", 
-                                width: 150,
-                                getCellContents: function (
-                                    rowInfo, 
-                                    dataIndex, 
-                                    expandedState, 
-                                    level, 
-                                    column, 
-                                    indentIndex, 
-                                    columnOrder) {
-                                        var prid = this.getColumnValue(dataIndex, column.index);
-                                        if(prid === "Loading..." || prid === "") {
-                                            return $("<div class='grid-cell'/>")
-                                                .width(column.width || 150)
-                                                .text(prid);
-                                        } else {
-                                            var activePullRequest = activePullRequests.find(function(element, index, array) {
-                                                return element.id == prid
-                                            });
-                                            return $("<div class='grid-cell'/>")
-                                                .width(column.width || 150)
-                                                .html($("<a/>")
-                                                    .attr("href", hostUri + projectName +"/_git/" + activePullRequest.repo + "/pullRequest/" + activePullRequest.id)
-                                                    .attr("target", "_top")
-                                                    .text("Pull Request " + activePullRequest.id));
-                                        }
-                                    } 
-                            },
-                            { 
-                                text: "Title", 
-                                index: "title", 
-                                width: 450 
-                            },
-                            { 
-                                text: "Repository", 
-                                index: "repo", 
-                                width: 200 
-                            },
-                            { 
-                                text: "My Vote", 
-                                index: "vote", 
-                                width: 200,
-                                getCellContents: function (
-                                    rowInfo, 
-                                    dataIndex, 
-                                    expandedState, 
-                                    level, 
-                                    column, 
-                                    indentIndex, 
-                                    columnOrder) {
-                                        var vote = this.getColumnValue(dataIndex, column.index);
-                                        var voteString;
-                                        var content = $("<div class='grid-cell'/>");
-                                        switch(vote) {
-                                            case "":
-                                            case "Loading...":
-                                                voteString = vote;
-                                                break;
-                                            case -10:
-                                                voteString = "Rejected";
-                                                content.append("<span class='bowtie-icon bowtie-status-failure'/>");
-                                                break;
-                                            case -5:
-                                                voteString = "Waiting for the author";
-                                                content.append("<span class='bowtie-icon bowtie-status-waiting-fill'/>");
-                                                break;
-                                            case -1:
-                                                voteString = "No Response (not required)";
-                                                content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
-                                                content.css("color", "gray");
-                                                break;    
-                                            case 0:
-                                                voteString = "Response Required";
-                                                content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
-                                                content.css("color", "red")
-                                                break;    
-                                            case 5:
-                                                voteString = "Approved with suggestions";
-                                                content.append("<span class='bowtie-icon bowtie-status-success' />");
-                                                break;
-                                            case 10:
-                                                voteString = "Approved";
-                                                content.append("<span class='bowtie-icon bowtie-status-success' />");                                                
-                                                break;
-                                            default: 
-                                                voteString = vote;
-                                        }
-                                        return content
-                                                    .width(column.width || 200)
-                                                    .append("<span class='vc-pullrequest-view-details-action-text' style='padding-left: 2px'>" + voteString + "</span>");
-                                    } 
+                    height: "1000px", // Explicit height is required for a Grid control
+                    columns: [
+                        // text is the column header text. 
+                        // index is the key into the source object to find the data for this column
+                        // width is the width of the column, in pixels
+                        {
+                            text: "Created By",
+                            index: "createdBy",
+                            width: 150,
+                            getCellContents: function (
+                                rowInfo,
+                                dataIndex,
+                                expandedState,
+                                level,
+                                column,
+                                indentIndex,
+                                columnOrder) {
+                                var createdBy = this.getColumnValue(dataIndex, column.index);
+                                var content = $("<div class='grid-cell'/>");
+
+                                if (createdBy === "Loading..." || createdBy === "") {
+                                    return content
+                                        .width(column.width || 150)
+                                        .text(createdBy);
+                                } else {
+                                    content.append("<img class='identity-picture' src='" + createdBy.imageUrl + "' alt='Image of " + createdBy.uniqueName + "' style='height:25px;width:25px;vertical-align:middle' />");
+                                    return content
+                                        .width(column.width || 150)
+                                        .append("<span class='identity-name' style='font-size:12px;color:#767676;padding-left:2px'>" + createdBy.displayName + "</span>");
+                                }
                             }
-                        ],
-                        // This data source is rendered into the Grid columns defined above
-                        source: [{
-                            id: "Loading...",
-                            title: "Loading...",
-                            repo: "Loading...",
-                            vote: "Loading..."
-                        }],
-                        useBowtieStyle: true                      
-                });                 
+                        },
+                        {
+                            text: "Id",
+                            index: "id",
+                            width: 150,
+                            getCellContents: function (
+                                rowInfo,
+                                dataIndex,
+                                expandedState,
+                                level,
+                                column,
+                                indentIndex,
+                                columnOrder) {
+                                var prid = this.getColumnValue(dataIndex, column.index);
+                                if (prid === "Loading..." || prid === "") {
+                                    return $("<div class='grid-cell'/>")
+                                        .width(column.width || 150)
+                                        .text(prid);
+                                } else {
+                                    var activePullRequest = activePullRequests.find(function (element, index, array) {
+                                        return element.id == prid
+                                    });
+                                    return $("<div class='grid-cell'/>")
+                                        .width(column.width || 150)
+                                        .html($("<a/>")
+                                            .attr("href", hostUri + projectName + "/_git/" + activePullRequest.repo + "/pullRequest/" + activePullRequest.id)
+                                            .attr("target", "_top")
+                                            .text("Pull Request " + activePullRequest.id));
+                                }
+                            }
+                        },
+                        {
+                            text: "Title",
+                            index: "title",
+                            width: 450
+                        },
+                        {
+                            text: "Repository",
+                            index: "repo",
+                            width: 200
+                        },
+                        {
+                            text: "My Vote",
+                            index: "vote",
+                            width: 200,
+                            getCellContents: function (
+                                rowInfo,
+                                dataIndex,
+                                expandedState,
+                                level,
+                                column,
+                                indentIndex,
+                                columnOrder) {
+                                var vote = this.getColumnValue(dataIndex, column.index);
+                                var voteString;
+                                var content = $("<div class='grid-cell'/>");
+                                switch (vote) {
+                                    case "":
+                                    case "Loading...":
+                                        voteString = vote;
+                                        break;
+                                    case -10:
+                                        voteString = "Rejected";
+                                        content.append("<span class='bowtie-icon bowtie-status-failure'/>");
+                                        break;
+                                    case -5:
+                                        voteString = "Waiting for the author";
+                                        content.append("<span class='bowtie-icon bowtie-status-waiting-fill'/>");
+                                        break;
+                                    case -1:
+                                        voteString = "No Response (not required)";
+                                        content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
+                                        content.css("color", "gray");
+                                        break;
+                                    case 0:
+                                        voteString = "Response Required";
+                                        content.append("<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response' />");
+                                        content.css("color", "red")
+                                        break;
+                                    case 5:
+                                        voteString = "Approved with suggestions";
+                                        content.append("<span class='bowtie-icon bowtie-status-success' />");
+                                        break;
+                                    case 10:
+                                        voteString = "Approved";
+                                        content.append("<span class='bowtie-icon bowtie-status-success' />");
+                                        break;
+                                    default:
+                                        voteString = vote;
+                                }
+                                return content
+                                    .width(column.width || 200)
+                                    .append("<span class='vc-pullrequest-view-details-action-text' style='padding-left: 2px'>" + voteString + "</span>");
+                            }
+                        }
+                    ],
+                    // This data source is rendered into the Grid columns defined above
+                    source: [{
+                        createdBy: "Loading...",
+                        id: "Loading...",
+                        title: "Loading...",
+                        repo: "Loading...",
+                        vote: "Loading..."
+                    }],
+                    useBowtieStyle: true
+                });
 
                 // Get a client to make REST calls to VSTS
                 var gitClient = TFS_Git_WebApi.getClient();
-                
+
                 // Call the "getRepositories" REST endpoint, giving a query ID
                 gitClient.getRepositories(projectName, true)
                     .then(function (repos) {
-                        console.log("Total repos in " + projectName + ": " + repos.length);  
+                        console.log("Total repos in " + projectName + ": " + repos.length);
                         var prs = [];
                         repos.forEach(function (r) {
                             //console.log("Repo " + r.name);
                             gitClient.getPullRequests(r.id, { status: "Active" })
                                 .then(function (prs) {
-                                    if(prs.length > 0) {
-                                        prs.forEach(function(p) {
+                                    if (prs.length > 0) {
+                                        prs.forEach(function (p) {
                                             gitClient.getPullRequestReviewers(r.id, p.pullRequestId, projectName)
                                                 .then(function (reviewers) {
                                                     console.log(reviewers);
                                                     var userVote = -1;
-                                                    var isUserAReviewer = reviewers.filter(function(e) {
-                                                        return e.id==user.id
+                                                    var isUserAReviewer = reviewers.filter(function (e) {
+                                                        return e.id == user.id
                                                     });
-                                                    
-                                                    if(isUserAReviewer.length > 0) {
+
+                                                    if (isUserAReviewer.length > 0) {
                                                         userVote = isUserAReviewer[0].vote;
                                                     }
                                                     activePullRequests.push({
+                                                        createdBy: p.createdBy,
                                                         id: p.pullRequestId,
                                                         url: p.url,
                                                         title: p.title,
@@ -211,22 +240,23 @@
                                                     });
                                                     grid.setDataSource(activePullRequests);
                                                 });
-                                            });
+                                        });
                                     }
                                 });
                         });
                     });
-                
-                window.setTimeout( function() {
+
+                window.setTimeout(function () {
                     prCount = activePullRequests.length;
-                    if(prCount === 0) {
+                    if (prCount === 0) {
                         grid.setDataSource([{
+                            createdBy: "",
                             id: "",
                             title: "",
                             repo: "",
                             vote: ""
                         }]);
-                    } 
+                    }
                     $("#hub-title").text($("#hub-title").text() + " (" + prCount + " pull requests)");
                 }, 5000);
 
