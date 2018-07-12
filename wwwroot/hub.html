@@ -7,6 +7,10 @@
     <script src="sdk/scripts/VSS.SDK.js"></script>
     <script src="sdk/scripts/q.js"></script>
     <style type="text/css">
+        html, body {
+            overflow: visible !important;
+        }
+
         #hub-title {
             font-size: 18px;
             font-weight: 200;
@@ -14,16 +18,25 @@
             padding: 2px 6px;
         }
 
+        .grid {
+            overflow: visible !important;
+        }
+
+        .grid-canvas {
+            overflow: visible !important;
+            position: relative !important;
+        }
+
         .identity-picture {
-            height:25px;
-            width:25px;
-            vertical-align:middle;
+            height: 25px;
+            width: 25px;
+            vertical-align: middle;
         }
 
         .identity-name {
-            font-size:12px;
-            color:#767676;
-            padding-left:2px;
+            font-size: 12px;
+            color: #767676;
+            padding-left: 2px;
         }
 
         .vc-pullrequest-view-details-action-text {
