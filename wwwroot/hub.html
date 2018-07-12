@@ -6,10 +6,34 @@
     <title>Active Pull Requests</title>
     <script src="sdk/scripts/VSS.SDK.js"></script>
     <script src="sdk/scripts/q.js"></script>
+    <style type="text/css">
+        #hub-title {
+            font-size: 18px;
+            font-weight: 200;
+            font-family: Segoe UI, Arial, Verdana, Helvetica Neue, Helvetica;
+            padding: 2px 6px;
+        }
+
+        .identity-picture {
+            height:25px;
+            width:25px;
+            vertical-align:middle;
+        }
+
+        .identity-name {
+            font-size:12px;
+            color:#767676;
+            padding-left:2px;
+        }
+
+        .vc-pullrequest-view-details-action-text {
+            padding-left: 2px;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="hub-title" title="All Repositories" style="font-size: 18px;font-weight: 200; font-family: Segoe UI,Arial,Verdana,Helvetica Neue,Helvetica;">All Repositories</div>
+    <div id="hub-title" title="All Repositories">All Repositories</div>
     <div id="grid-container"></div>
 
     <script type="text/javascript">
@@ -67,7 +91,7 @@
 
                 // Create a Grid control to display the repos
                 var grid = Controls.create(Grids.Grid, $("#grid-container"), {
-                    height: "1000px", // Explicit height is required for a Grid control
+                    height: "0px", // Explicit height is required for a Grid control
                     columns: [
                         // text is the column header text. 
                         // index is the key into the source object to find the data for this column
@@ -92,10 +116,10 @@
                                         .width(column.width || 150)
                                         .text(createdBy);
                                 } else {
-                                    content.append("<img class='identity-picture' src='" + createdBy.imageUrl + "' alt='Image of " + createdBy.uniqueName + "' style='height:25px;width:25px;vertical-align:middle' />");
+                                    content.append("<img class='identity-picture' src='" + createdBy.imageUrl + "' alt='Image of " + createdBy.uniqueName + "' />");
                                     return content
                                         .width(column.width || 150)
-                                        .append("<span class='identity-name' style='font-size:12px;color:#767676;padding-left:2px'>" + createdBy.displayName + "</span>");
+                                        .append("<span class='identity-name'>" + createdBy.displayName + "</span>");
                                 }
                             }
                         },
@@ -190,7 +214,7 @@
                                 }
                                 return content
                                     .width(column.width || 200)
-                                    .append("<span class='vc-pullrequest-view-details-action-text' style='padding-left: 2px'>" + voteString + "</span>");
+                                    .append("<span class='vc-pullrequest-view-details-action-text'>" + voteString + "</span>");
                             }
                         }
                     ],
