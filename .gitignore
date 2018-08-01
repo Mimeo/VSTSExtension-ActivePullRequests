@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Custom files
 publish.cmd
 
@@ -189,8 +188,3 @@ tmp/
 .idea/
 
 *.lock.json
-=======
-node_modules/
-.vscode/
-dist/
->>>>>>> Rewrote extension from scratch using TypeScript

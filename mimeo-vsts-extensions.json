@@ -1,32 +1,12 @@
-<<<<<<< HEAD
-﻿{
-  "manifestVersion": 1,
-  "id": "mimeo-active-pull-requests",
-  "publisher": "mimeo",
-  "version": "0.2.16",
-  "name": "Active Pull Requests",
-  "description": "View all active pull requests across all repos in a team.",
-  "public": true,
-  "targets": [
-      {
-        "id" : "Microsoft.VisualStudio.Services"  
-      }
-  ],
-  "icons": {
-      "default": "images/pullRequest.png"
-  },
-  "categories": [
-      "Code"
-=======
 {
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "0.2.16.9",
+  "version": "0.2.16.11",
   "name": "All Active Pull Requests",
   "scopes": ["vso.code", "vso.code_status", "vso.profile"],
   "description": "View all active pull requests across all repos in a team.",
   "public": true,
-  "publisher": "sandhead",
+  "publisher": "mimeo",
   "icons": {
     "default": "static/images/pullRequest.png"
   },
@@ -37,7 +17,6 @@
   ],
   "demands": [
     "api-version/3.0"
->>>>>>> Rewrote extension from scratch using TypeScript
   ],
   "tags": [
       "pullrequest",
@@ -48,22 +27,6 @@
       "code-review"  
   ],
   "screenshots": [
-<<<<<<< HEAD
-      {
-          "path": "images/screenshot_sm.png"
-      },  
-      {
-          "path": "images/screenshot.png"
-      }  
-  ],
-  "content": {
-      "details": {
-          "path": "overview.md"
-      },
-      "license": {
-          "path": "LICENSE"
-      }
-=======
     {
       "path": "static/images/Screenshot.png"
     }
@@ -75,7 +38,6 @@
     "details": {
       "path": "overview.md"
     }
->>>>>>> Rewrote extension from scratch using TypeScript
   },
   "links": {
       "learn": {
@@ -85,43 +47,6 @@
           "uri": "https://github.com/mimeo/vstSExtension-ActivePullRequests/issues"
       }
   },
-<<<<<<< HEAD
-  "branding": {
-      "color": "#3F99D3",
-      "theme": "light"  
-  },
-  "contributions": [
-    {
-      "id": "active-pull-requests-extension-hub",
-      "type": "ms.vss-web.hub",
-      "description": "View all active pull requests across all repos in a team.",
-      "targets": [
-        "ms.vss-code-web.code-hub-group"
-      ],
-      "properties": {
-        "name": "All Active Pull Requests",
-        "order": 100,
-        "uri": "wwwroot/hub.html"
-      }
-    }
-  ],
-  "scopes": [
-      "vso.code",
-      "vso.profile"
-  ],
-  "files": [
-      {
-          "path": "wwwroot/hub.html", "addressable" : "true"
-      },
-      {
-          "path": "wwwroot/sdk/scripts", "addressable" : "true"
-      },
-      {
-          "path": "images/logo.png", "addressable" : "true"
-      }
-  ]
-}
-=======
   "repository": {
     "type": "git",
     "uri": "https://github.com/mimeo/VSTSExtension-ActivePullRequests/"
@@ -176,4 +101,3 @@
     }
   ]
 }
->>>>>>> Rewrote extension from scratch using TypeScript

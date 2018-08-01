@@ -42,6 +42,7 @@ prClient.getPullRequests().then(prs => {
         // Reviewers cell
         const tableCellReviewers = document.createElement("td");
         tableCellReviewers.classList.add("reviewers-cell");
+        tableCellReviewers.setAttribute("sorttable_customkey", "" + pr.reviewers.length);
         pr.reviewers.forEach(reviewer => {
             const reviewerVote = prClient.voteNumberToVote(reviewer.vote);
             const reviewerElement = document.createElement("span");
