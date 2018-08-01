@@ -1,9 +1,9 @@
-![Pull Request](/images/pullRequest.png)
+![Pull Request](/static/images/pullRequest.png)
 # VSTSExtension-ActivePullRequests
 
 Visual Studio Team Services extension to view all active pull requests across all repositories for a team project.
 
-![Screenshot](/images/screenshot.jpg)
+![Screenshot](/static/images/Screenshot.png)
 
 ## Contribute
 Check out the [contribution guidelines](CONTRIBUTING.md)
