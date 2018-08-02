@@ -21,6 +21,7 @@ prClient.getPullRequests().then(prs => {
         tableRow.appendChild(tableCellUser);
         // Pull Request ID cell
         const tableCellId = document.createElement("td");
+        tableCellId.setAttribute("sorttable_customkey", "" + pr.id);
         tableCellId.innerHTML = "<a href='" + pr.url + "' target='_top'>Pull Request #" + pr.id + "</a>";
         tableRow.appendChild(tableCellId);
         // Title cell
