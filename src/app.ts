@@ -5,7 +5,7 @@ const prClient = new VssPullRequests();
 prClient.getPullRequests().then(prs => {
     // Build the table
     const tableHeader = document.getElementById("pr-header");
-    tableHeader.innerText += " (" + prs.length + " pull requests)";
+    tableHeader.innerText += " (" + prs.length + " pull request" + (prs.length === 1 ? "" : "s") + ")";
     const tableBody = document.getElementById("pr-body");
     console.log("*** pull request data ***", prs);
     prs.forEach(pr => {

@@ -22,6 +22,7 @@
     "@types/jquery": "^2.0.34",
     "@types/q": "0.0.32",
     "applicationinsights-js": "^1.0.11",
+    "es6-shim": "^0.35.3",
     "rxjs": "^6.2.2",
     "sorttable": "^1.0.2",
     "vss-web-extension-sdk": "^5.134.0"
