@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
@@ -16,6 +17,27 @@
   },
   "categories": [
       "Code"
+=======
+{
+  "manifestVersion": 1,
+  "id": "mimeo-active-pull-requests",
+  "version": "0.2.16.9",
+  "name": "All Active Pull Requests",
+  "scopes": ["vso.code", "vso.code_status", "vso.profile"],
+  "description": "View all active pull requests across all repos in a team.",
+  "public": true,
+  "publisher": "sandhead",
+  "icons": {
+    "default": "static/images/pullRequest.png"
+  },
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "demands": [
+    "api-version/3.0"
+>>>>>>> Rewrote extension from scratch using TypeScript
   ],
   "tags": [
       "pullrequest",
@@ -26,6 +48,7 @@
       "code-review"  
   ],
   "screenshots": [
+<<<<<<< HEAD
       {
           "path": "images/screenshot_sm.png"
       },  
@@ -40,6 +63,19 @@
       "license": {
           "path": "LICENSE"
       }
+=======
+    {
+      "path": "static/images/Screenshot.png"
+    }
+  ],
+  "content": {
+    "license": {
+      "path": "license.md"
+    },
+    "details": {
+      "path": "overview.md"
+    }
+>>>>>>> Rewrote extension from scratch using TypeScript
   },
   "links": {
       "learn": {
@@ -49,6 +85,7 @@
           "uri": "https://github.com/mimeo/vstSExtension-ActivePullRequests/issues"
       }
   },
+<<<<<<< HEAD
   "branding": {
       "color": "#3F99D3",
       "theme": "light"  
@@ -84,3 +121,59 @@
       }
   ]
 }
+=======
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/mimeo/VSTSExtension-ActivePullRequests/"
+  },
+  "branding": {
+    "color": "#3F99D3",
+    "theme": "light"
+  },
+  "files": [
+    {
+      "path": "dist",
+      "addressable": true
+    },
+    {
+      "path": "static/images/logo.png",
+      "addressable": true
+    },
+    {
+      "path": "static/css/app.css",
+      "addressable": true
+    },
+    {
+      "path": "static/index.html",
+      "addressable": true
+    },
+    {
+      "path": "node_modules/vss-web-extension-sdk/lib",
+      "addressable": true,
+      "packagePath": "lib"
+    }
+    ,{
+      "path": "node_modules/sorttable",
+      "addressable": true,
+      "packagePath": "lib"
+    }
+ 
+  ],
+  "categories": [
+    "Code"
+  ],
+  "contributions": [
+    {
+      "id": "active-pull-requests-extension-hub",
+      "targets": ["ms.vss-code-web.code-hub-group"],
+      "type": "ms.vss-web.hub",
+      "description": "View all active pull requests across all repos in a team.",
+      "properties": {
+        "name": "All Active Pull Requests",
+        "order": 100,
+        "uri": "static/index.html"
+      }
+    }
+  ]
+}
+>>>>>>> Rewrote extension from scratch using TypeScript

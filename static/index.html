@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>TypeScript HTML App</title>
+    <link rel="stylesheet" href="css/app.css" type="text/css" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <script src="../lib/sorttable.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+        // Initialize the VSS sdk
+        VSS.init({
+            usePlatformScripts: true,
+            usePlatformStyles: true
+        });
+
+        // Wait for the SDK to be initialized
+        VSS.ready(function () {
+            VSS.require(["dist/app"], function (app) { });
+        });
+    </script>
+
+    <h1 id="pr-header">All Repositories</h1>
+
+    <table id="pr-table">
+        <thead>
+            <tr class="table-row table-header">
+                <th class="sorttable_nosort"><!-- Space reserved for user avatar --></th>
+                <th>Created By</th>
+                <th class="pr-id-header">Id</th>
+                <th>Title</th>
+                <th>Repository</th>
+                <th>My Vote</th>
+                <th>Reviewers</th>
+            </tr>
+        </thead>
+        <tbody id="pr-body"></tbody>
+    </table>
+</body>
+</html>
