@@ -1,21 +1,22 @@
-﻿{
+{
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "publisher": "mimeo",
-  "version": "0.2.16",
-  "name": "Active Pull Requests",
+  "version": "0.2.16.20",
+  "name": "All Active Pull Requests",
+  "scopes": ["vso.code", "vso.code_status", "vso.profile"],
   "description": "View all active pull requests across all repos in a team.",
   "public": true,
-  "targets": [
-      {
-        "id" : "Microsoft.VisualStudio.Services"  
-      }
-  ],
+  "publisher": "mimeo",
   "icons": {
-      "default": "images/pullRequest.png"
+    "default": "static/images/pullRequest.png"
   },
-  "categories": [
-      "Code"
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "demands": [
+    "api-version/3.0"
   ],
   "tags": [
       "pullrequest",
@@ -26,20 +27,17 @@
       "code-review"  
   ],
   "screenshots": [
-      {
-          "path": "images/screenshot_sm.png"
-      },  
-      {
-          "path": "images/screenshot.png"
-      }  
+    {
+      "path": "static/images/Screenshot.png"
+    }
   ],
   "content": {
-      "details": {
-          "path": "overview.md"
-      },
-      "license": {
-          "path": "LICENSE"
-      }
+    "license": {
+      "path": "license.md"
+    },
+    "details": {
+      "path": "overview.md"
+    }
   },
   "links": {
       "learn": {
@@ -49,38 +47,62 @@
           "uri": "https://github.com/mimeo/vstSExtension-ActivePullRequests/issues"
       }
   },
-  "branding": {
-      "color": "#3F99D3",
-      "theme": "light"  
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/mimeo/VSTSExtension-ActivePullRequests/"
   },
+  "branding": {
+    "color": "#3F99D3",
+    "theme": "light"
+  },
+  "files": [
+    {
+      "path": "dist",
+      "addressable": true
+    },
+    {
+      "path": "static/images/logo.png",
+      "addressable": true
+    },
+    {
+      "path": "static/css/app.css",
+      "addressable": true
+    },
+    {
+      "path": "static/index.html",
+      "addressable": true
+    },
+    {
+      "path": "node_modules/vss-web-extension-sdk/lib",
+      "addressable": true,
+      "packagePath": "lib"
+    },
+    {
+      "path": "node_modules/es6-shim",
+      "addressable": true,
+      "packagePath": "lib/polyfill"
+    }
+    ,{
+      "path": "node_modules/sorttable",
+      "addressable": true,
+      "packagePath": "lib"
+    }
+ 
+  ],
+  "categories": [
+    "Code"
+  ],
   "contributions": [
     {
       "id": "active-pull-requests-extension-hub",
+      "targets": ["ms.vss-code-web.code-hub-group"],
       "type": "ms.vss-web.hub",
       "description": "View all active pull requests across all repos in a team.",
-      "targets": [
-        "ms.vss-code-web.code-hub-group"
-      ],
       "properties": {
         "name": "All Active Pull Requests",
         "order": 100,
-        "uri": "wwwroot/hub.html"
+        "uri": "static/index.html"
       }
     }
-  ],
-  "scopes": [
-      "vso.code",
-      "vso.profile"
-  ],
-  "files": [
-      {
-          "path": "wwwroot/hub.html", "addressable" : "true"
-      },
-      {
-          "path": "wwwroot/sdk/scripts", "addressable" : "true"
-      },
-      {
-          "path": "images/logo.png", "addressable" : "true"
-      }
   ]
 }

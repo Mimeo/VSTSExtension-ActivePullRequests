@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "knockout": "registry:npm/knockout#3.4.0+20160516171930",
+    "requirejs": "registry:npm/requirejs#2.2.0+20160319062357"
+  },
+  "globalDependencies": {
+    "jquery": "registry:dt/jquery#1.10.0+20160929162922",
+    "q": "registry:dt/q#0.0.0+20161004185634"
+  }
+}

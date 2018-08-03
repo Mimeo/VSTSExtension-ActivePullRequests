@@ -1,9 +1,33 @@
 {
-	"version": "1.0.0",
-	"name": "ASP.NET",
-	"private": true,
+  "scripts": {
+    "build": "npm run lint && npm run clean && npm run webpack",
+    "webpack": "webpack --progress --colors --config webpack.config.js --output-path ./dist -p",
+    "postbuild": "npm run package",
+    "package": "tfx extension create  --rev-version",
+    "gallery-publish": "tfx extension publish --rev-version",
+    "clean": "rimraf ./dist && rimraf ./*.vsix",
+    "lint": "tslint -c tslint.json 'src/*.ts'"
+  },
   "devDependencies": {
-    "gulp": "3.9.0",
-    "vss-web-extension-sdk": "1.97.0"
-  }
+    "cpx": "^1.5.0",
+    "rimraf": "^2.6.1",
+    "tfx-cli": "^0.4.5",
+    "ts-loader": "^2.0.0",
+    "tslint": "^5.2.0",
+    "tslint-loader": "^3.5.3",
+    "typescript": "2.3.4",
+    "webpack": "^2.5.1"
+  },
+  "dependencies": {
+    "@types/jquery": "^2.0.34",
+    "@types/q": "0.0.32",
+    "applicationinsights-js": "^1.0.11",
+    "es6-shim": "^0.35.3",
+    "rxjs": "^6.2.2",
+    "sorttable": "^1.0.2",
+    "vss-web-extension-sdk": "^5.134.0"
+  },
+  "name": "vstsexthub",
+  "private": true,
+  "version": "0.0.0"
 }

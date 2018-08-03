@@ -1,0 +1,62 @@
+body {
+    font-family: "Segoe UI VSS (Regular)","-apple-system",BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Ubuntu,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+}
+
+h1 {
+    font-size: 18px;
+    font-weight: 200;
+    font-family: Segoe UI,Arial,Verdana,Helvetica Neue,Helvetica;
+    margin: 12px;
+}
+
+#pr-body:empty::after {
+    content: 'Loading...';
+}
+.table-row.table-header {
+    color: #666666;
+}
+.table-row.table-header th {
+    text-align: left;
+    font-weight: normal;
+    user-select: none;
+}
+.table-header th:not(:empty):hover {
+    background-color: #f4f4f4;
+    cursor: pointer;
+}
+.table-row:not(.table-header):hover {
+    background-color: #f4f4f4;
+}
+
+.table-row th, .table-row td {
+    padding: 8px;
+}
+.table-row td .user-avatar {
+    width: 24px;
+    border-radius: 100%;
+    display: block;
+}
+.table-row td.reviewers-cell {
+    height: 43px;
+}
+
+.reviewer-icon {
+    display: inline-block;
+    position: relative;
+    margin-right: 4px;
+}
+.vote-icon {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+}
+.vote-icon .bowtie-icon {
+    background: #ffffff;
+    width: 16px;
+    border-radius: 100%;
+    padding-left: 1px;
+    transform: scale(0.8);
+}
+.table-row:hover .vote-icon .bowtie-icon {
+    background: #f4f4f4;
+}
