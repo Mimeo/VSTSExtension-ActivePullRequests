@@ -10,8 +10,11 @@ h1 {
     margin: 12px;
 }
 
-#pr-body:empty::after {
+.loading#pr-body:empty::after {
     content: 'Loading...';
+}
+.loaded#pr-body:empty::after {
+    content: 'No active pull requests found...';
 }
 .table-row.table-header {
     color: #666666;
