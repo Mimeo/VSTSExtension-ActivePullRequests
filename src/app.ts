@@ -22,7 +22,7 @@ prClient.getPullRequests().then(prs => {
         // Pull Request ID cell
         const tableCellId = document.createElement("td");
         tableCellId.setAttribute("sorttable_customkey", "" + pr.id);
-        tableCellId.innerHTML = "<a href='" + pr.url + "' target='_top'>Pull Request #" + pr.id + "</a>";
+        tableCellId.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "/pullRequest/" + pr.id) + "' target='_top'>#" + pr.id + "</a>";
         tableRow.appendChild(tableCellId);
         // Title cell
         const tableCellTitle = document.createElement("td");
@@ -32,6 +32,14 @@ prClient.getPullRequests().then(prs => {
         const tableCellRepo = document.createElement("td");
         tableCellRepo.innerText = pr.repo;
         tableRow.appendChild(tableCellRepo);
+        // Base cell
+        const tableCellBaseBranch = document.createElement("td");
+        tableCellBaseBranch.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "?version=GB" + pr.baseBranch) + "' target='_top'>#" + pr.baseBranch + "</a>";
+        tableRow.appendChild(tableCellBaseBranch);
+        // Target cell
+        const tableCellTargetBranch = document.createElement("td");
+        tableCellBaseBranch.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "?version=GB" + pr.targetBranch) + "' target='_top'>#" + pr.targetBranch + "</a>";
+        tableRow.appendChild(tableCellTargetBranch);
         // My Vote cell
         const tableCellVote = document.createElement("td");
         const vote = prClient.voteNumberToVote(pr.vote);
