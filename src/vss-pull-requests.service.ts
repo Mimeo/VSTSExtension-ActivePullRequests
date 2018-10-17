@@ -1,4 +1,4 @@
- /// <reference types="vss-web-extension-sdk" />
+/// <reference types="vss-web-extension-sdk" />
 import GitRestClient = require("TFS/VersionControl/GitRestClient");
 import { Vote, PullRequest } from "./app.models";
 import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
@@ -39,11 +39,14 @@ export class VssPullRequests {
                     const pullRequest: PullRequest = {
                         createdBy: pr.createdBy,
                         id: pr.pullRequestId,
-                        url: this.hostUri + this.projectName + "/_git/" + repo.name + "/pullRequest/" + pr.pullRequestId,
+                        baseUri: this.hostUri,
+                        projectName: this.projectName,
                         title: pr.title,
                         repo: repo.name,
                         vote: userVote,
-                        reviewers: pr.reviewers
+                        reviewers: pr.reviewers,
+                        baseBranch: pr.sourceRefName.replace('refs/heads/', ''),
+                        targetBranch: pr.targetRefName.replace('refs/heads/', '')
                     };
                     return pullRequest;
                 });
