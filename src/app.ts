@@ -66,6 +66,6 @@ prClient.getPullRequests().then(prs => {
 }).then(() => sorttable.makeSortable(document.getElementById("pr-table"))).then(() => {
     const prIdHeader = document.getElementsByClassName("pr-id-header")[0];
     sorttable.innerSortFunction.apply(prIdHeader, []);
-    document.getElementById('pr-body').classList.remove('loading');
-    document.getElementById('pr-body').classList.add('loaded');
+    document.getElementById("pr-body").classList.remove("loading");
+    document.getElementById("pr-body").classList.add("loaded");
 });

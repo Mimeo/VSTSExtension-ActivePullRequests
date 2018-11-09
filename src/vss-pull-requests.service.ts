@@ -45,8 +45,8 @@ export class VssPullRequests {
                         repo: repo.name,
                         vote: userVote,
                         reviewers: pr.reviewers,
-                        baseBranch: pr.sourceRefName.replace('refs/heads/', ''),
-                        targetBranch: pr.targetRefName.replace('refs/heads/', '')
+                        baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
+                        targetBranch: pr.targetRefName.replace("refs/heads/", "")
                     };
                     return pullRequest;
                 });
