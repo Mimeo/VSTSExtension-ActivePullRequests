@@ -9,6 +9,7 @@ prClient.getPullRequests().then(prs => {
     const tableBody = document.getElementById("pr-body");
     console.log("*** pull request data ***", prs);
     prs.forEach(pr => {
+        const repoUrl = pr.baseUri + encodeURIComponent(pr.projectName) + "/_git/" + encodeURIComponent(pr.repo);
         const tableRow = document.createElement("tr");
         tableRow.classList.add("table-row");
         // User Avatar cell
@@ -22,7 +23,7 @@ prClient.getPullRequests().then(prs => {
         // Pull Request ID cell
         const tableCellId = document.createElement("td");
         tableCellId.setAttribute("sorttable_customkey", "" + pr.id);
-        tableCellId.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "/pullRequest/" + pr.id) + "' target='_top'>#" + pr.id + "</a>";
+        tableCellId.innerHTML = "<a href='" + repoUrl + "/pullRequest/" + pr.id + "' target='_top'>#" + pr.id + "</a>";
         tableRow.appendChild(tableCellId);
         // Title cell
         const tableCellTitle = document.createElement("td");
@@ -34,11 +35,11 @@ prClient.getPullRequests().then(prs => {
         tableRow.appendChild(tableCellRepo);
         // Base cell
         const tableCellBaseBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "?version=GB" + pr.baseBranch) + "' target='_top'>#" + pr.baseBranch + "</a>";
+        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.baseBranch) + "' target='_top'>#" + pr.baseBranch + "</a>";
         tableRow.appendChild(tableCellBaseBranch);
         // Target cell
         const tableCellTargetBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<a href='" + (pr.baseUri + pr.projectName + "/_git/" + pr.repo + "?version=GB" + pr.targetBranch) + "' target='_top'>#" + pr.targetBranch + "</a>";
+        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.targetBranch) + "' target='_top'>#" + pr.targetBranch + "</a>";
         tableRow.appendChild(tableCellTargetBranch);
         // My Vote cell
         const tableCellVote = document.createElement("td");
