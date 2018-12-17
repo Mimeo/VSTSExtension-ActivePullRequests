@@ -39,7 +39,7 @@ prClient.getPullRequests().then(prs => {
         tableRow.appendChild(tableCellBaseBranch);
         // Target cell
         const tableCellTargetBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.targetBranch) + "' target='_top'>#" + pr.targetBranch + "</a>";
+        tableCellTargetBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.targetBranch) + "' target='_top'>#" + pr.targetBranch + "</a>";
         tableRow.appendChild(tableCellTargetBranch);
         // My Vote cell
         const tableCellVote = document.createElement("td");
