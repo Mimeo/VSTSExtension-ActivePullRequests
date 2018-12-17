@@ -25,11 +25,11 @@ h1 {
     user-select: none;
 }
 .table-header th:not(:empty):hover {
-    background-color: #f4f4f4;
+    background-color: rgb(var(--palette-neutral-6));
     cursor: pointer;
 }
 .table-row:not(.table-header):hover {
-    background-color: #f4f4f4;
+    background-color: rgb(var(--palette-neutral-6));
 }
 
 .table-row th, .table-row td {
@@ -55,12 +55,12 @@ h1 {
     right: -4px;
 }
 .vote-icon .bowtie-icon {
-    background: #ffffff;
+    background: var(--background-color);
     width: 16px;
     border-radius: 100%;
     padding-left: 1px;
     transform: scale(0.8);
 }
 .table-row:hover .vote-icon .bowtie-icon {
-    background: #f4f4f4;
+    background-color: rgb(var(--palette-neutral-6));
 }
