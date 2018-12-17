@@ -14,18 +14,18 @@
     "tfx-cli": "^0.4.5",
     "ts-loader": "^2.0.0",
     "tslint": "^5.2.0",
-    "tslint-loader": "^3.5.3",
-    "typescript": "2.3.4",
+    "tslint-loader": "^3.5.4",
+    "typescript": "^2.3.4",
     "webpack": "^2.5.1"
   },
   "dependencies": {
-    "@types/jquery": "^2.0.34",
+    "@types/jquery": "^2.0.51",
     "@types/q": "0.0.32",
-    "applicationinsights-js": "^1.0.11",
-    "es6-shim": "^0.35.3",
-    "rxjs": "^6.2.2",
+    "applicationinsights-js": "^1.0.20",
+    "es6-shim": "^0.35.4",
+    "rxjs": "^6.3.3",
     "sorttable": "^1.0.2",
-    "vss-web-extension-sdk": "^5.134.0"
+    "vss-web-extension-sdk": "^5.141.0"
   },
   "name": "vstsexthub",
   "private": true,
