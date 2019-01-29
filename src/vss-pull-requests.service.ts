@@ -30,7 +30,7 @@ export class VssPullRequests {
         };
         return Promise.all(repos.map(repo => {
             return this.client.getPullRequests(repo.id, search).then(prs => {
-                return prs.map(pr => {
+                return prs.filter(pr => !pr.isDraft).map(pr => {
                     let userVote = -1;
                     const userAsReviewer = pr.reviewers.filter(reviewer => reviewer.id === this.user.id);
                     if (userAsReviewer.length === 1) {
