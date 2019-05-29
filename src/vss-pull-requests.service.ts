@@ -1,16 +1,20 @@
 /// <reference types="vss-web-extension-sdk" />
 import GitRestClient = require("TFS/VersionControl/GitRestClient");
-import { Vote, PullRequest } from "./app.models";
+import BuildRestClient = require("TFS/Build/RestClient");
+import { Vote, PullRequest, PullRequestWithBuild } from "./app.models";
 import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
+import { Build, BuildStatus, BuildResult } from "TFS/Build/Contracts";
 
 export class VssPullRequests {
-    private client: GitRestClient.GitHttpClient3_1;
+    private gitClient: GitRestClient.GitHttpClient3_1;
+    private buildClient: BuildRestClient.BuildHttpClient4_1;
     private projectName: string;
     private hostUri: string;
     private user: UserContext;
 
     constructor() {
-        this.client = GitRestClient.getClient();
+        this.gitClient = GitRestClient.getClient();
+        this.buildClient = BuildRestClient.getClient();
         const context = VSS.getWebContext();
         this.projectName = context.project.name;
         this.hostUri = context.host.uri;
@@ -29,7 +33,7 @@ export class VssPullRequests {
             targetRefName: undefined
         };
         return Promise.all(repos.map(repo => {
-            return this.client.getPullRequests(repo.id, search).then(prs => {
+            return this.gitClient.getPullRequests(repo.id, search).then(prs => {
                 return prs.filter(pr => !pr.isDraft).map(pr => {
                     let userVote = -1;
                     const userAsReviewer = pr.reviewers.filter(reviewer => reviewer.id === this.user.id);
@@ -54,11 +58,28 @@ export class VssPullRequests {
         }));
     }
 
+    applyLatestBuilds(prs: PullRequest[]): PromiseLike<PullRequestWithBuild[]> {
+        return this.buildClient.getBuilds(this.projectName).then(builds => Promise.all(prs.map(pr => {
+            const sorted = builds.sort((a, b) => {
+                if (a.queueTime.getTime() < b.queueTime.getTime()) {
+                    return 1;
+                } else if (a.queueTime.getTime() > b.queueTime.getTime()) {
+                    return -1;
+                }
+                return 0;
+            });
+            return {
+                pr: pr,
+                build: sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString())
+            };
+        })));
+    }
+
     getPullRequests(): PromiseLike<PullRequest[]> {
-        return this.client.getRepositories(this.projectName, true)
+        return this.gitClient.getRepositories(this.projectName, true)
             .then(repos => this.getPullRequestData(repos)).then(prs => {
                 let unwrappedPrs: PullRequest[] = [];
-                prs.forEach(repoPrGroup => {
+                prs.map(repoPrGroup => {
                     unwrappedPrs = unwrappedPrs.concat(repoPrGroup);
                 });
                 return unwrappedPrs;
@@ -108,5 +129,46 @@ export class VssPullRequests {
                 break;
         }
         return voteObj;
+    }
+
+    buildStatusToString(build: Build) {
+        let text: string;
+        switch (build.status) {
+            case BuildStatus.NotStarted:
+                text = "Not Started";
+                break;
+            case BuildStatus.InProgress:
+                text = "In Progress";
+                break;
+            case BuildStatus.Postponed:
+                text = "Postponed";
+                break;
+            case BuildStatus.Cancelling:
+                text = "Cancelling";
+                break;
+            case BuildStatus.Completed:
+                switch (build.result) {
+                    case BuildResult.Succeeded:
+                        text = "Succeeded";
+                        break;
+                    case BuildResult.PartiallySucceeded:
+                        text = "Partially Succeeded";
+                        break;
+                    case BuildResult.Canceled:
+                        text = "Canceled";
+                        break;
+                    case BuildResult.Failed:
+                        text = "Failed";
+                        break;
+                    default:
+                        text = "Completed";
+                        break;
+                }
+                break;
+            default:
+                text = "N/A";
+                break;
+        }
+        return text;
     }
 }

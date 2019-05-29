@@ -2,48 +2,52 @@ import { VssPullRequests } from "./vss-pull-requests.service";
 declare var sorttable: any;
 
 const prClient = new VssPullRequests();
-prClient.getPullRequests().then(prs => {
+prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prBuilds => {
     // Build the table
     const tableHeader = document.getElementById("pr-header");
-    tableHeader.innerText += " (" + prs.length + " pull request" + (prs.length === 1 ? "" : "s") + ")";
+    tableHeader.innerText += " (" + prBuilds.length + " pull request" + (prBuilds.length === 1 ? "" : "s") + ")";
     const tableBody = document.getElementById("pr-body");
-    console.log("*** pull request data ***", prs);
-    prs.forEach(pr => {
-        const repoUrl = pr.baseUri + encodeURIComponent(pr.projectName) + "/_git/" + encodeURIComponent(pr.repo);
+    console.log("*** pull request data ***", prBuilds);
+    prBuilds.forEach(prBuild => {
+        const repoUrl = prBuild.pr.baseUri + encodeURIComponent(prBuild.pr.projectName) + "/_git/" + encodeURIComponent(prBuild.pr.repo);
         const tableRow = document.createElement("tr");
         tableRow.classList.add("table-row");
         // User Avatar cell
         const tableCellUserAvatar = document.createElement("td");
-        tableCellUserAvatar.innerHTML = "<img class='user-avatar' src='" + pr.createdBy.imageUrl + "' alt='" + pr.createdBy.uniqueName + "\'s avatar' />";
+        tableCellUserAvatar.innerHTML = "<img class='user-avatar' src='" + prBuild.pr.createdBy.imageUrl + "' alt='" + prBuild.pr.createdBy.uniqueName + "\'s avatar' />";
         tableRow.appendChild(tableCellUserAvatar);
         // Created By cell
         const tableCellUser = document.createElement("td");
-        tableCellUser.innerText = pr.createdBy.displayName;
+        tableCellUser.innerText = prBuild.pr.createdBy.displayName;
         tableRow.appendChild(tableCellUser);
         // Pull Request ID cell
         const tableCellId = document.createElement("td");
-        tableCellId.setAttribute("sorttable_customkey", "" + pr.id);
-        tableCellId.innerHTML = "<a href='" + repoUrl + "/pullRequest/" + pr.id + "' target='_top'>#" + pr.id + "</a>";
+        tableCellId.setAttribute("sorttable_customkey", "" + prBuild.pr.id);
+        tableCellId.innerHTML = "<a href='" + repoUrl + "/pullRequest/" + prBuild.pr.id + "' target='_top'>#" + prBuild.pr.id + "</a>";
         tableRow.appendChild(tableCellId);
         // Title cell
         const tableCellTitle = document.createElement("td");
-        tableCellTitle.innerText = pr.title;
+        tableCellTitle.innerText = prBuild.pr.title;
         tableRow.appendChild(tableCellTitle);
         // Repository cell
         const tableCellRepo = document.createElement("td");
-        tableCellRepo.innerText = pr.repo;
+        tableCellRepo.innerText = prBuild.pr.repo;
         tableRow.appendChild(tableCellRepo);
         // Base cell
         const tableCellBaseBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.baseBranch) + "' target='_top'>" + pr.baseBranch + "</a>";
+        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.baseBranch) + "' target='_top'>" + prBuild.pr.baseBranch + "</a>";
         tableRow.appendChild(tableCellBaseBranch);
         // Target cell
         const tableCellTargetBranch = document.createElement("td");
-        tableCellTargetBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(pr.targetBranch) + "' target='_top'>" + pr.targetBranch + "</a>";
+        tableCellTargetBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.targetBranch) + "' target='_top'>" + prBuild.pr.targetBranch + "</a>";
         tableRow.appendChild(tableCellTargetBranch);
+        // Build Status cell
+        const tableCellBuildStatus = document.createElement("td");
+        tableCellBuildStatus.innerText = prClient.buildStatusToString(prBuild.build);
+        tableRow.appendChild(tableCellBuildStatus);
         // My Vote cell
         const tableCellVote = document.createElement("td");
-        const vote = prClient.voteNumberToVote(pr.vote);
+        const vote = prClient.voteNumberToVote(prBuild.pr.vote);
         tableCellVote.innerHTML = vote.icon + " " + vote.message;
         if (vote.color !== undefined) {
             tableCellVote.style.color = vote.color;
@@ -52,8 +56,8 @@ prClient.getPullRequests().then(prs => {
         // Reviewers cell
         const tableCellReviewers = document.createElement("td");
         tableCellReviewers.classList.add("reviewers-cell");
-        tableCellReviewers.setAttribute("sorttable_customkey", "" + pr.reviewers.length);
-        pr.reviewers.forEach(reviewer => {
+        tableCellReviewers.setAttribute("sorttable_customkey", "" + prBuild.pr.reviewers.length);
+        prBuild.pr.reviewers.forEach(reviewer => {
             const reviewerVote = prClient.voteNumberToVote(reviewer.vote);
             const reviewerElement = document.createElement("span");
             reviewerElement.classList.add("reviewer-icon");
