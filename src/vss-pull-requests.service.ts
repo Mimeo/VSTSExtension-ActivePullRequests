@@ -3,7 +3,7 @@ import GitRestClient = require("TFS/VersionControl/GitRestClient");
 import BuildRestClient = require("TFS/Build/RestClient");
 import { Vote, PullRequest, PullRequestWithBuild } from "./app.models";
 import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
-import { Build, BuildStatus, BuildResult } from "TFS/Build/Contracts";
+import { Build, BuildStatus, BuildResult, BuildReason } from "TFS/Build/Contracts";
 
 export class VssPullRequests {
     private gitClient: GitRestClient.GitHttpClient3_1;
@@ -59,20 +59,21 @@ export class VssPullRequests {
     }
 
     applyLatestBuilds(prs: PullRequest[]): PromiseLike<PullRequestWithBuild[]> {
-        return this.buildClient.getBuilds(this.projectName).then(builds => Promise.all(prs.map(pr => {
-            const sorted = builds.sort((a, b) => {
-                if (a.queueTime.getTime() < b.queueTime.getTime()) {
-                    return 1;
-                } else if (a.queueTime.getTime() > b.queueTime.getTime()) {
-                    return -1;
-                }
-                return 0;
-            });
-            return {
-                pr: pr,
-                build: sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString())
-            };
-        })));
+        return this.buildClient.getBuilds(this.projectName, undefined, undefined, undefined, undefined, undefined, undefined, BuildReason.PullRequest)
+            .then(builds => Promise.all(prs.map(pr => {
+                const sorted = builds.sort((a, b) => {
+                    if (a.queueTime.getTime() < b.queueTime.getTime()) {
+                        return 1;
+                    } else if (a.queueTime.getTime() > b.queueTime.getTime()) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                return {
+                    pr: pr,
+                    build: sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString())
+                };
+            })));
     }
 
     getPullRequests(): PromiseLike<PullRequest[]> {
