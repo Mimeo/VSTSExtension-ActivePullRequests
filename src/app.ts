@@ -35,18 +35,22 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         tableRow.appendChild(tableCellRepo);
         // Base cell
         const tableCellBaseBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.baseBranch) + "' target='_top'>" + prBuild.pr.baseBranch + "</a>";
+        tableCellBaseBranch.innerHTML = "<span class=\"bowtie-icon bowtie-tfvc-branch\"></span><a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.baseBranch) + "' target='_top'>" + prBuild.pr.baseBranch + "</a>";
         tableRow.appendChild(tableCellBaseBranch);
         // Target cell
         const tableCellTargetBranch = document.createElement("td");
-        tableCellTargetBranch.innerHTML = "<a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.targetBranch) + "' target='_top'>" + prBuild.pr.targetBranch + "</a>";
+        tableCellTargetBranch.innerHTML = "<span class=\"bowtie-icon bowtie-tfvc-branch\"></span><a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.targetBranch) + "' target='_top'>" + prBuild.pr.targetBranch + "</a>";
         tableRow.appendChild(tableCellTargetBranch);
         // Build Status cell
         const tableCellBuildStatus = document.createElement("td");
-        tableCellBuildStatus.innerText = prClient.buildStatusToString(prBuild.build);
+        const buildDisplay = prClient.buildStatusToBuildDisplay(prBuild.build);
+        tableCellBuildStatus.setAttribute("sorttable_customkey", prBuild.build.status.toString());
+        tableCellBuildStatus.innerHTML = `<span class="icon bowtie-icon bowtie-${buildDisplay.icon}"></span> ${buildDisplay.message}`;
+        tableCellBuildStatus.style.color = buildDisplay.color !== undefined ? buildDisplay.color : "#808080";
         tableRow.appendChild(tableCellBuildStatus);
         // My Vote cell
         const tableCellVote = document.createElement("td");
+        tableCellVote.setAttribute("sorttable_customkey", "" + prBuild.pr.vote);
         const vote = prClient.voteNumberToVote(prBuild.pr.vote);
         tableCellVote.innerHTML = vote.icon + " " + vote.message;
         if (vote.color !== undefined) {

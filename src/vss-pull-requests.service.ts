@@ -1,7 +1,7 @@
 /// <reference types="vss-web-extension-sdk" />
 import GitRestClient = require("TFS/VersionControl/GitRestClient");
 import BuildRestClient = require("TFS/Build/RestClient");
-import { Vote, PullRequest, PullRequestWithBuild } from "./app.models";
+import { Vote, PullRequest, PullRequestWithBuild, BuildDisplay } from "./app.models";
 import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
 import { Build, BuildStatus, BuildResult, BuildReason } from "TFS/Build/Contracts";
 
@@ -81,6 +81,9 @@ export class VssPullRequests {
             .then(repos => this.getPullRequestData(repos)).then(prs => {
                 let unwrappedPrs: PullRequest[] = [];
                 prs.map(repoPrGroup => {
+                    repoPrGroup.map(pr => {
+                        console.log(this.gitClient.getPullRequestIterations(pr.repo, pr.id, undefined, true));
+                    });
                     unwrappedPrs = unwrappedPrs.concat(repoPrGroup);
                 });
                 return unwrappedPrs;
@@ -113,7 +116,7 @@ export class VssPullRequests {
                 voteObj = {
                     icon: "<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response'></span>",
                     message: "Response Required",
-                    color: "#ff0000"
+                    color: "rgba(var(--palette-accent1,218, 10, 0),1)"
                 };
                 break;
             case 5:
@@ -132,44 +135,79 @@ export class VssPullRequests {
         return voteObj;
     }
 
-    buildStatusToString(build: Build) {
-        let text: string;
+    buildStatusToBuildDisplay(build: Build): BuildDisplay {
+        let buildDisplay: BuildDisplay;
         switch (build.status) {
             case BuildStatus.NotStarted:
-                text = "Not Started";
+                buildDisplay = {
+                    message: "Not Started",
+                    icon: "status-waiting"
+                };
                 break;
             case BuildStatus.InProgress:
-                text = "In Progress";
+                buildDisplay = {
+                    message: "In Progress",
+                    icon: "status-waiting"
+                };
                 break;
             case BuildStatus.Postponed:
-                text = "Postponed";
+                buildDisplay = {
+                    message: "Postponed",
+                    icon: "status-waiting"
+                };
                 break;
             case BuildStatus.Cancelling:
-                text = "Cancelling";
+                buildDisplay = {
+                    message: "Cancelling",
+                    icon: "status-error"
+                };
                 break;
             case BuildStatus.Completed:
                 switch (build.result) {
                     case BuildResult.Succeeded:
-                        text = "Succeeded";
+                        buildDisplay = {
+                            message: "Succeeded",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
                         break;
                     case BuildResult.PartiallySucceeded:
-                        text = "Partially Succeeded";
+                        buildDisplay = {
+                            message: "Partially Succeeded",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
                         break;
                     case BuildResult.Canceled:
-                        text = "Canceled";
+                        buildDisplay = {
+                            message: "Canceled",
+                            icon: "status-error",
+                            color: "rgba(var(--palette-accent1,218, 10, 0),1)"
+                        };
                         break;
                     case BuildResult.Failed:
-                        text = "Failed";
+                        buildDisplay = {
+                            message: "Failed",
+                            icon: "status-failure",
+                            color: "rgba(var(--palette-accent1,218, 10, 0),1)"
+                        };
                         break;
                     default:
-                        text = "Completed";
+                        buildDisplay = {
+                            message: "Completed",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
                         break;
                 }
                 break;
             default:
-                text = "N/A";
+                buildDisplay = {
+                    message: "N/A",
+                    icon: ""
+                };
                 break;
         }
-        return text;
+        return buildDisplay;
     }
 }

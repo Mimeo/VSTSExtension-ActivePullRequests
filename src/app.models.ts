@@ -26,3 +26,9 @@ export interface Vote {
     message: string;
     color?: string;
 }
+
+export interface BuildDisplay {
+    icon: string;
+    message: string;
+    color?: string;
+}
