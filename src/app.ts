@@ -35,18 +35,18 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         tableRow.appendChild(tableCellRepo);
         // Base cell
         const tableCellBaseBranch = document.createElement("td");
-        tableCellBaseBranch.innerHTML = "<span class=\"bowtie-icon bowtie-tfvc-branch\"></span><a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.baseBranch) + "' target='_top'>" + prBuild.pr.baseBranch + "</a>";
+        tableCellBaseBranch.innerHTML = `<a href="${repoUrl}?version=GB${encodeURIComponent(prBuild.pr.baseBranch)}" target="_top"><span class="bowtie-icon bowtie-tfvc-branch"></span>${prBuild.pr.baseBranch}</a>`;
         tableRow.appendChild(tableCellBaseBranch);
         // Target cell
         const tableCellTargetBranch = document.createElement("td");
-        tableCellTargetBranch.innerHTML = "<span class=\"bowtie-icon bowtie-tfvc-branch\"></span><a href='" + repoUrl + "?version=GB" + encodeURIComponent(prBuild.pr.targetBranch) + "' target='_top'>" + prBuild.pr.targetBranch + "</a>";
+        tableCellTargetBranch.innerHTML = `<a href="${repoUrl}?version=GB${encodeURIComponent(prBuild.pr.targetBranch)}" target="_top"><span class="bowtie-icon bowtie-tfvc-branch"></span>${prBuild.pr.targetBranch}</a>`;
         tableRow.appendChild(tableCellTargetBranch);
         // Build Status cell
         const tableCellBuildStatus = document.createElement("td");
         const buildDisplay = prClient.buildStatusToBuildDisplay(prBuild.build);
         tableCellBuildStatus.setAttribute("sorttable_customkey", prBuild.build.status.toString());
-        tableCellBuildStatus.innerHTML = `<span class="icon bowtie-icon bowtie-${buildDisplay.icon}"></span> ${buildDisplay.message}`;
-        tableCellBuildStatus.style.color = buildDisplay.color !== undefined ? buildDisplay.color : "#808080";
+        tableCellBuildStatus.innerHTML = (buildDisplay.icon != null ? `<span class="icon bowtie-icon bowtie-${buildDisplay.icon}"></span> ` : "") + buildDisplay.message;
+        tableCellBuildStatus.style.color = buildDisplay.color != null ? buildDisplay.color : "#808080";
         tableRow.appendChild(tableCellBuildStatus);
         // My Vote cell
         const tableCellVote = document.createElement("td");
@@ -61,12 +61,13 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         const tableCellReviewers = document.createElement("td");
         tableCellReviewers.classList.add("reviewers-cell");
         tableCellReviewers.setAttribute("sorttable_customkey", "" + prBuild.pr.reviewers.length);
-        prBuild.pr.reviewers.forEach(reviewer => {
-            const reviewerVote = prClient.voteNumberToVote(reviewer.vote);
+        prBuild.pr.reviewers.map(x => {
+            return { vote: prClient.voteNumberToVote(x.vote), reviewer: x };
+        }).sort(x => x.vote.order).forEach(reviewerVote => {
             const reviewerElement = document.createElement("span");
             reviewerElement.classList.add("reviewer-icon");
-            reviewerElement.innerHTML += "<img class='user-avatar' src='" + reviewer.imageUrl + "' alt=\"" + reviewer.uniqueName + "'s avatar\" />";
-            reviewerElement.innerHTML += "<div class='vote-icon'>" + reviewerVote.icon + "</div>";
+            reviewerElement.innerHTML += `<img class="user-avatar" src="${reviewerVote.reviewer.imageUrl}" alt="${reviewerVote.reviewer.uniqueName}'s avatar" />`;
+            reviewerElement.innerHTML += "<div class='vote-icon'>" + reviewerVote.vote.icon + "</div>";
             tableCellReviewers.appendChild(reviewerElement);
         });
         tableRow.appendChild(tableCellReviewers);

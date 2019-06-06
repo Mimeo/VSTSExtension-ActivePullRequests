@@ -24,11 +24,13 @@ export interface PullRequestWithBuild {
 export interface Vote {
     icon: string;
     message: string;
+    showIconInList: boolean;
+    order: number;
     color?: string;
 }
 
 export interface BuildDisplay {
-    icon: string;
+    icon?: string;
     message: string;
     color?: string;
 }

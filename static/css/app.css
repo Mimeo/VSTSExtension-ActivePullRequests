@@ -44,6 +44,10 @@ h1 {
     height: 43px;
 }
 
+.bowtie-icon {
+    line-height: initial;
+}
+
 .reviewer-icon {
     display: inline-block;
     position: relative;
@@ -57,6 +61,7 @@ h1 {
 .vote-icon .bowtie-icon {
     background: var(--background-color);
     width: 16px;
+    border: 1px solid var(--background-color);
     border-radius: 100%;
     padding-left: 1px;
     transform: scale(0.8);

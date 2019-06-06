@@ -81,9 +81,6 @@ export class VssPullRequests {
             .then(repos => this.getPullRequestData(repos)).then(prs => {
                 let unwrappedPrs: PullRequest[] = [];
                 prs.map(repoPrGroup => {
-                    repoPrGroup.map(pr => {
-                        console.log(this.gitClient.getPullRequestIterations(pr.repo, pr.id, undefined, true));
-                    });
                     unwrappedPrs = unwrappedPrs.concat(repoPrGroup);
                 });
                 return unwrappedPrs;
@@ -96,39 +93,51 @@ export class VssPullRequests {
             case -10:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-failure'></span>",
-                    message: "Rejected"
+                    message: "Rejected",
+                    showIconInList: true,
+                    order: 0
                 };
                 break;
             case -5:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-waiting-fill'></span>",
-                    message: "Waiting for the author"
+                    message: "Waiting for the author",
+                    showIconInList: true,
+                    order: 1
                 };
                 break;
             case -1:
                 voteObj = {
                     icon: "<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response'></span>",
                     message: "No Response (not required)",
-                    color: "#808080"
+                    color: "#808080",
+                    showIconInList: false,
+                    order: 4
                 };
                 break;
             case 0:
                 voteObj = {
                     icon: "<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response'></span>",
                     message: "Response Required",
-                    color: "rgba(var(--palette-accent1,218, 10, 0),1)"
+                    color: "rgba(var(--palette-accent1,218, 10, 0),1)",
+                    showIconInList: false,
+                    order: 3
                 };
                 break;
             case 5:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-success'></span>",
-                    message: "Approved with suggestions"
+                    message: "Approved with suggestions",
+                    showIconInList: true,
+                    order: 2
                 };
                 break;
             case 10:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-success'></span>",
-                    message: "Approved"
+                    message: "Approved",
+                    showIconInList: true,
+                    order: 2
                 };
                 break;
         }
@@ -203,8 +212,7 @@ export class VssPullRequests {
                 break;
             default:
                 buildDisplay = {
-                    message: "N/A",
-                    icon: ""
+                    message: "N/A"
                 };
                 break;
         }
