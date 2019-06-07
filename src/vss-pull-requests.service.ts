@@ -69,9 +69,10 @@ export class VssPullRequests {
                     }
                     return 0;
                 });
+                const build = sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString());
                 return {
                     pr: pr,
-                    build: sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString())
+                    build: build
                 };
             })));
     }
@@ -145,6 +146,9 @@ export class VssPullRequests {
     }
 
     buildStatusToBuildDisplay(build: Build): BuildDisplay {
+        if (build == null) {
+            return { message: "" };
+        }
         let buildDisplay: BuildDisplay;
         switch (build.status) {
             case BuildStatus.NotStarted:
@@ -211,9 +215,7 @@ export class VssPullRequests {
                 }
                 break;
             default:
-                buildDisplay = {
-                    message: "N/A"
-                };
+                buildDisplay = { message: "" };
                 break;
         }
         return buildDisplay;

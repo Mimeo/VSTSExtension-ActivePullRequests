@@ -44,7 +44,7 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         // Build Status cell
         const tableCellBuildStatus = document.createElement("td");
         const buildDisplay = prClient.buildStatusToBuildDisplay(prBuild.build);
-        tableCellBuildStatus.setAttribute("sorttable_customkey", prBuild.build.status.toString());
+        tableCellBuildStatus.setAttribute("sorttable_customkey", (prBuild.build != null ? prBuild.build.status : 0).toString());
         tableCellBuildStatus.innerHTML = (buildDisplay.icon != null ? `<span class="icon bowtie-icon bowtie-${buildDisplay.icon}"></span> ` : "") + buildDisplay.message;
         tableCellBuildStatus.style.color = buildDisplay.color != null ? buildDisplay.color : "#808080";
         tableRow.appendChild(tableCellBuildStatus);
