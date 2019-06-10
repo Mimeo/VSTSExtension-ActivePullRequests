@@ -1,6 +1,7 @@
 /// <reference types="vss-web-extension-sdk" />
 import { IdentityRefWithVote } from "TFS/VersionControl/Contracts";
 import { IdentityRef } from "VSS/WebApi/Contracts";
+import { Build } from "TFS/Build/Contracts";
 
 export interface PullRequest {
     createdBy: IdentityRef;
@@ -15,8 +16,21 @@ export interface PullRequest {
     targetBranch: string;
 }
 
+export interface PullRequestWithBuild {
+    pr: PullRequest;
+    build: Build;
+}
+
 export interface Vote {
     icon: string;
+    message: string;
+    showIconInList: boolean;
+    order: number;
+    color?: string;
+}
+
+export interface BuildDisplay {
+    icon?: string;
     message: string;
     color?: string;
 }

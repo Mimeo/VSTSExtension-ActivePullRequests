@@ -1,16 +1,20 @@
 /// <reference types="vss-web-extension-sdk" />
 import GitRestClient = require("TFS/VersionControl/GitRestClient");
-import { Vote, PullRequest } from "./app.models";
+import BuildRestClient = require("TFS/Build/RestClient");
+import { Vote, PullRequest, PullRequestWithBuild, BuildDisplay } from "./app.models";
 import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
+import { Build, BuildStatus, BuildResult, BuildReason } from "TFS/Build/Contracts";
 
 export class VssPullRequests {
-    private client: GitRestClient.GitHttpClient3_1;
+    private gitClient: GitRestClient.GitHttpClient3_1;
+    private buildClient: BuildRestClient.BuildHttpClient4_1;
     private projectName: string;
     private hostUri: string;
     private user: UserContext;
 
     constructor() {
-        this.client = GitRestClient.getClient();
+        this.gitClient = GitRestClient.getClient();
+        this.buildClient = BuildRestClient.getClient();
         const context = VSS.getWebContext();
         this.projectName = context.project.name;
         this.hostUri = context.host.uri;
@@ -29,7 +33,7 @@ export class VssPullRequests {
             targetRefName: undefined
         };
         return Promise.all(repos.map(repo => {
-            return this.client.getPullRequests(repo.id, search).then(prs => {
+            return this.gitClient.getPullRequests(repo.id, search).then(prs => {
                 return prs.filter(pr => !pr.isDraft).map(pr => {
                     let userVote = -1;
                     const userAsReviewer = pr.reviewers.filter(reviewer => reviewer.id === this.user.id);
@@ -54,11 +58,30 @@ export class VssPullRequests {
         }));
     }
 
+    applyLatestBuilds(prs: PullRequest[]): PromiseLike<PullRequestWithBuild[]> {
+        return this.buildClient.getBuilds(this.projectName, undefined, undefined, undefined, undefined, undefined, undefined, BuildReason.PullRequest)
+            .then(builds => Promise.all(prs.map(pr => {
+                const sorted = builds.sort((a, b) => {
+                    if (a.queueTime.getTime() < b.queueTime.getTime()) {
+                        return 1;
+                    } else if (a.queueTime.getTime() > b.queueTime.getTime()) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                const build = sorted.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.id.toString());
+                return {
+                    pr: pr,
+                    build: build
+                };
+            })));
+    }
+
     getPullRequests(): PromiseLike<PullRequest[]> {
-        return this.client.getRepositories(this.projectName, true)
+        return this.gitClient.getRepositories(this.projectName, true)
             .then(repos => this.getPullRequestData(repos)).then(prs => {
                 let unwrappedPrs: PullRequest[] = [];
-                prs.forEach(repoPrGroup => {
+                prs.map(repoPrGroup => {
                     unwrappedPrs = unwrappedPrs.concat(repoPrGroup);
                 });
                 return unwrappedPrs;
@@ -71,42 +94,130 @@ export class VssPullRequests {
             case -10:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-failure'></span>",
-                    message: "Rejected"
+                    message: "Rejected",
+                    showIconInList: true,
+                    order: 0
                 };
                 break;
             case -5:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-waiting-fill'></span>",
-                    message: "Waiting for the author"
+                    message: "Waiting for the author",
+                    showIconInList: true,
+                    order: 1
                 };
                 break;
             case -1:
                 voteObj = {
                     icon: "<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response'></span>",
                     message: "No Response (not required)",
-                    color: "#808080"
+                    color: "#808080",
+                    showIconInList: false,
+                    order: 4
                 };
                 break;
             case 0:
                 voteObj = {
                     icon: "<span class='icon bowtie-icon bowtie-status-waiting bowtie-status-waiting-response'></span>",
                     message: "Response Required",
-                    color: "#ff0000"
+                    color: "rgba(var(--palette-accent1,218, 10, 0),1)",
+                    showIconInList: false,
+                    order: 3
                 };
                 break;
             case 5:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-success'></span>",
-                    message: "Approved with suggestions"
+                    message: "Approved with suggestions",
+                    showIconInList: true,
+                    order: 2
                 };
                 break;
             case 10:
                 voteObj = {
                     icon: "<span class='bowtie-icon bowtie-status-success'></span>",
-                    message: "Approved"
+                    message: "Approved",
+                    showIconInList: true,
+                    order: 2
                 };
                 break;
         }
         return voteObj;
+    }
+
+    buildStatusToBuildDisplay(build: Build): BuildDisplay {
+        if (build == null) {
+            return { message: "" };
+        }
+        let buildDisplay: BuildDisplay;
+        switch (build.status) {
+            case BuildStatus.NotStarted:
+                buildDisplay = {
+                    message: "Not Started",
+                    icon: "status-waiting"
+                };
+                break;
+            case BuildStatus.InProgress:
+                buildDisplay = {
+                    message: "In Progress",
+                    icon: "status-waiting"
+                };
+                break;
+            case BuildStatus.Postponed:
+                buildDisplay = {
+                    message: "Postponed",
+                    icon: "status-waiting"
+                };
+                break;
+            case BuildStatus.Cancelling:
+                buildDisplay = {
+                    message: "Cancelling",
+                    icon: "status-error"
+                };
+                break;
+            case BuildStatus.Completed:
+                switch (build.result) {
+                    case BuildResult.Succeeded:
+                        buildDisplay = {
+                            message: "Succeeded",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
+                        break;
+                    case BuildResult.PartiallySucceeded:
+                        buildDisplay = {
+                            message: "Partially Succeeded",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
+                        break;
+                    case BuildResult.Canceled:
+                        buildDisplay = {
+                            message: "Canceled",
+                            icon: "status-error",
+                            color: "rgba(var(--palette-accent1,218, 10, 0),1)"
+                        };
+                        break;
+                    case BuildResult.Failed:
+                        buildDisplay = {
+                            message: "Failed",
+                            icon: "status-failure",
+                            color: "rgba(var(--palette-accent1,218, 10, 0),1)"
+                        };
+                        break;
+                    default:
+                        buildDisplay = {
+                            message: "Completed",
+                            icon: "status-success",
+                            color: "rgba(var(--palette-accent2-dark,16, 124, 16),1)"
+                        };
+                        break;
+                }
+                break;
+            default:
+                buildDisplay = { message: "" };
+                break;
+        }
+        return buildDisplay;
     }
 }

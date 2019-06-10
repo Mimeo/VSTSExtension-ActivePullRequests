@@ -3,7 +3,7 @@
     "build": "npm run lint && npm run clean && npm run webpack",
     "webpack": "webpack --progress --colors --config webpack.config.js --output-path ./dist -p",
     "postbuild": "npm run package",
-    "package": "tfx extension create --rev-version",
+    "package": "tfx extension create --rev-version --manifest-globs ./mimeo-vsts-extensions.json",
     "gallery-publish": "tfx extension publish --rev-version",
     "clean": "rimraf ./dist && rimraf ./*.vsix",
     "lint": "tslint -c tslint.json 'src/*.ts'"
