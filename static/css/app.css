@@ -13,6 +13,11 @@ h1 {
 .loading#pr-body:empty::after {
     content: 'Loading...';
 }
+.loading2#temphack:empty::after {
+    content: 'If this message doesn\'t disappear after several seconds please contact your administrator to uninstall and reinstall the All Active Pull Requests extension. See https://github.com/Mimeo/VSTSExtension-ActivePullRequests/issues/39 for information';
+    font-size:small;
+    font-style:italic;
+}
 .loaded#pr-body:empty::after {
     content: 'No active pull requests found...';
 }

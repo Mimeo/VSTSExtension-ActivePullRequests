@@ -77,5 +77,6 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
     const prIdHeader = document.getElementsByClassName("pr-id-header")[0];
     sorttable.innerSortFunction.apply(prIdHeader, []);
     document.getElementById("pr-body").classList.remove("loading");
+    document.getElementById("temphack").classList.remove("loading2");
     document.getElementById("pr-body").classList.add("loaded");
 });
