@@ -14,7 +14,7 @@ h1 {
     content: 'Loading...';
 }
 .loaded#pr-body:empty::after {
-    content: 'No active pull requests found...';
+    content: 'No active pull requests found.';
 }
 .table-row.table-header {
     color: #666666;
@@ -68,4 +68,8 @@ h1 {
 }
 .table-row:hover .vote-icon .bowtie-icon {
     background-color: rgb(var(--palette-neutral-6));
+}
+.tempmsg {
+    font-size:small;
+    font-style:italic;
 }

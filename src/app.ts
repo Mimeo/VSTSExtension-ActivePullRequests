@@ -76,6 +76,9 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
 }).then(() => sorttable.makeSortable(document.getElementById("pr-table"))).then(() => {
     const prIdHeader = document.getElementsByClassName("pr-id-header")[0];
     sorttable.innerSortFunction.apply(prIdHeader, []);
+    // remove special message node
+    const specialMessageNode = document.getElementById("special-message");
+    specialMessageNode.parentNode.removeChild(specialMessageNode);
     document.getElementById("pr-body").classList.remove("loading");
     document.getElementById("pr-body").classList.add("loaded");
 });
