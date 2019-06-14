@@ -2,7 +2,7 @@
 import GitRestClient = require("TFS/VersionControl/GitRestClient");
 import BuildRestClient = require("TFS/Build/RestClient");
 import { Vote, PullRequest, PullRequestWithBuild, BuildDisplay } from "./app.models";
-import { PullRequestStatus, GitPullRequestSearchCriteria, GitRepository } from "TFS/VersionControl/Contracts";
+import { PullRequestStatus, GitPullRequestSearchCriteria } from "TFS/VersionControl/Contracts";
 import { Build, BuildStatus, BuildResult, BuildReason } from "TFS/Build/Contracts";
 
 export class VssPullRequests {
@@ -11,6 +11,16 @@ export class VssPullRequests {
     private projectName: string;
     private hostUri: string;
     private user: UserContext;
+    private search: GitPullRequestSearchCriteria = {
+        creatorId: undefined,
+        includeLinks: undefined,
+        repositoryId: undefined,
+        reviewerId: undefined,
+        sourceRefName: undefined,
+        sourceRepositoryId: undefined,
+        status: PullRequestStatus.Active,
+        targetRefName: undefined
+    };
 
     constructor() {
         this.gitClient = GitRestClient.getClient();
@@ -19,43 +29,6 @@ export class VssPullRequests {
         this.projectName = context.project.name;
         this.hostUri = context.host.uri;
         this.user = context.user;
-    }
-
-    private getPullRequestData(repos: GitRepository[]) {
-        const search: GitPullRequestSearchCriteria = {
-            creatorId: undefined,
-            includeLinks: undefined,
-            repositoryId: undefined,
-            reviewerId: undefined,
-            sourceRefName: undefined,
-            sourceRepositoryId: undefined,
-            status: PullRequestStatus.Active,
-            targetRefName: undefined
-        };
-        return Promise.all(repos.map(repo => {
-            return this.gitClient.getPullRequests(repo.id, search).then(prs => {
-                return prs.filter(pr => !pr.isDraft).map(pr => {
-                    let userVote = -1;
-                    const userAsReviewer = pr.reviewers.filter(reviewer => reviewer.id === this.user.id);
-                    if (userAsReviewer.length === 1) {
-                        userVote = userAsReviewer[0].vote;
-                    }
-                    const pullRequest: PullRequest = {
-                        createdBy: pr.createdBy,
-                        id: pr.pullRequestId,
-                        baseUri: this.hostUri,
-                        projectName: this.projectName,
-                        title: pr.title,
-                        repo: repo.name,
-                        vote: userVote,
-                        reviewers: pr.reviewers,
-                        baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
-                        targetBranch: pr.targetRefName.replace("refs/heads/", "")
-                    };
-                    return pullRequest;
-                });
-            });
-        }));
     }
 
     applyLatestBuilds(prs: PullRequest[]): PromiseLike<PullRequestWithBuild[]> {
@@ -78,14 +51,28 @@ export class VssPullRequests {
     }
 
     getPullRequests(): PromiseLike<PullRequest[]> {
-        return this.gitClient.getRepositories(this.projectName, true)
-            .then(repos => this.getPullRequestData(repos)).then(prs => {
-                let unwrappedPrs: PullRequest[] = [];
-                prs.map(repoPrGroup => {
-                    unwrappedPrs = unwrappedPrs.concat(repoPrGroup);
-                });
-                return unwrappedPrs;
+        return this.gitClient.getPullRequestsByProject(this.projectName, this.search).then(prs => {
+            return prs.filter(pr => !pr.isDraft).map(pr => {
+                let userVote = -1;
+                const userAsReviewer = pr.reviewers.filter(reviewer => reviewer.id === this.user.id);
+                if (userAsReviewer.length === 1) {
+                    userVote = userAsReviewer[0].vote;
+                }
+                const pullRequest: PullRequest = {
+                    createdBy: pr.createdBy,
+                    id: pr.pullRequestId,
+                    baseUri: this.hostUri,
+                    projectName: this.projectName,
+                    title: pr.title,
+                    repo: pr.repository.name,
+                    vote: userVote,
+                    reviewers: pr.reviewers,
+                    baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
+                    targetBranch: pr.targetRefName.replace("refs/heads/", "")
+                };
+                return pullRequest;
             });
+        });
     }
 
     voteNumberToVote(vote: number): Vote {
