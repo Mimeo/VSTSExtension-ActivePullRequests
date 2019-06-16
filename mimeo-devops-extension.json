@@ -1,12 +1,12 @@
 {
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "1.0.10",
+  "version": "1.0.58",
   "name": "All Active Pull Requests",
   "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile"],
   "description": "View all active pull requests across all repos in a team.",
   "public": true,
-  "publisher": "mimeo-vs-marketplace",
+  "publisher": "sandhead",
   "icons": {
     "default": "static/images/pullRequest.png"
   },
@@ -61,31 +61,8 @@
       "addressable": true
     },
     {
-      "path": "static/images/logo.png",
+      "path": "static",
       "addressable": true
-    },
-    {
-      "path": "static/css/app.css",
-      "addressable": true
-    },
-    {
-      "path": "static/index.html",
-      "addressable": true
-    },
-    {
-      "path": "node_modules/vss-web-extension-sdk/lib",
-      "addressable": true,
-      "packagePath": "lib"
-    },
-    {
-      "path": "node_modules/es6-shim",
-      "addressable": true,
-      "packagePath": "lib/polyfill"
-    }
-    ,{
-      "path": "node_modules/sorttable",
-      "addressable": true,
-      "packagePath": "lib"
     }
   ],
   "categories": [

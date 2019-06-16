@@ -1,16 +1,23 @@
 {
   "compilerOptions": {
+    "charset": "utf8",
+    "experimentalDecorators": true,
     "module": "amd",
     "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noImplicitThis": true,
     "target": "es5",
-    "lib": ["es2015", "dom"],
     "rootDir": "src/",
     "outDir": "dist/",
+    "jsx": "react",
+    "lib": [
+      "es5",
+      "es6",
+      "dom",
+      "es2015.promise"
+    ],
     "types": [
-      "vss-web-extension-sdk"
+      "react"
     ]
-  },
-  "files": [
-    "src/app.ts"
-  ]
+  }
 }

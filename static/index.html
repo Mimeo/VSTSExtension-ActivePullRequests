@@ -1,63 +1,10 @@
 <!DOCTYPE html>
-
-<html lang="en">
+<html>
 <head>
-    <meta charset="utf-8" />
-    <title>All Active Pull Requests</title>
-    <link rel="stylesheet" href="css/app.css" type="text/css" />
-    <script type="text/javascript">
-        function isInternetExplorer() {
-            const ua = window.navigator.userAgent;
-            if (ua.indexOf("Trident/7.0") > 0 || ua.indexOf("Trident/6.0") > 0 || ua.indexOf("Trident/5.0") > 0)
-                return true;
-            else
-                return false;
-        }
-
-        // IE polyfill
-        if (isInternetExplorer()) {
-            const importScript = document.createElement('ed');
-            importScript.src = '../lib/polyfill/es6-shim.min.js';
-            document.head.appendChild(importScript);
-        }
-    </script>
-    <script src="../lib/VSS.SDK.min.js"></script>
-    <script src="../lib/sorttable.js"></script>
+  <title>All Active Pull Requests</title>
 </head>
 <body>
-    <script type="text/javascript">
-        // Initialize the VSS sdk
-        VSS.init({
-            usePlatformScripts: true,
-            usePlatformStyles: true,
-            applyTheme: true
-        });
-
-        // Wait for the SDK to be initialized
-        VSS.ready(function () {
-            VSS.require(["dist/app"], function (app) { });
-        });
-    </script>
-
-    <h1 id="pr-header">All Repositories</h1>
-
-    <table id="pr-table">
-        <thead>
-            <tr class="table-row table-header">
-                <th class="sorttable_nosort"><!-- Space reserved for user avatar --></th>
-                <th>Created By</th>
-                <th class="pr-id-header">Id</th>
-                <th>Title</th>
-                <th>Repository</th>
-                <th>Base</th>
-                <th>Target</th>
-                <th>Build Status</th>
-                <th>My Vote</th>
-                <th>Reviewers</th>
-            </tr>
-        </thead>
-        <tbody id="pr-body" class="loading"></tbody>
-    </table>
+  <main id="root"></main>
+  <script src="../dist/bundle.js"></script>
 </body>
-
 </html>
