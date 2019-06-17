@@ -64,7 +64,7 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         status: PullRequestStatus.Active,
         targetRefName: undefined
       }
-    }
+    };
   }
 
   componentDidMount() {
