@@ -1,14 +1,15 @@
-import * as API from "azure-devops-extension-api";
-import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { Card } from "azure-devops-ui/Card";
-import { ObservableValue } from "azure-devops-ui/Core/Observable";
-import { ColumnFill, ITableColumn, renderSimpleCell, SimpleTableCell, Table, TableColumnLayout } from "azure-devops-ui/Table";
+import { Icon, IconSize } from "azure-devops-ui/Icon";
+import { Link } from "azure-devops-ui/Link";
+import { ITableColumn, SimpleTableCell, Table, TableColumnLayout, TwoLineTableCell } from "azure-devops-ui/Table";
 import { Tooltip } from "azure-devops-ui/TooltipEx";
-import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 import { IIdentityDetailsProvider, VssPersona } from "azure-devops-ui/VssPersona";
 import * as React from "react";
 import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } from "./PullRequestTable.models";
+import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
+import { ZeroData, ZeroDataActionType } from "azure-devops-ui/ZeroData";
+import * as zeroImage from "./../../static/images/pullRequest.png";
 
 function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   return {
@@ -22,21 +23,56 @@ function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
 }
 
 export class PullRequestTable extends React.Component<PullRequestTableProps, PullRequestTableState> {
-  private gitClient: GitRestClient;
-  private fixedColumns = [
+  private renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    return (
+      <TwoLineTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        line1={
+          <div className="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m flex-row scroll-hidden">
+            <Tooltip overflowOnly={true}>
+              <Link href={`${this.props.hostUrl}/_git/${tableItem.repo.name}/pullRequest/${tableItem.id}`}
+                className="text-ellipsis" subtle={true}>#{tableItem.id}: {tableItem.title}</Link>
+            </Tooltip>
+          </div>
+        } line2={
+          <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
+            <Tooltip overflowOnly={true}>
+              <Link className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+                <Icon iconName="OpenSource" />{tableItem.baseBranch}
+              </Link>
+            </Tooltip>
+            <Icon iconName="ChevronRightSmall" size={IconSize.small} />
+            <Tooltip overflowOnly={true}>
+              <Link className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+                <Icon iconName="OpenSource" />{tableItem.targetBranch}
+              </Link>
+            </Tooltip>
+          </div>} />
+    );
+  }
+  private fixedColumns: ITableColumn<PullRequestTableItem>[] = [
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "author",
       name: "Author",
       readonly: true,
       renderCell: this.renderAuthorColumn,
-      width: new ObservableValue(200)
+      width: 200
     },
     {
-      id: "title",
-      name: "Title",
+      id: "details",
+      name: "Details",
       readonly: true,
-      renderCell: renderSimpleCell,
+      renderCell: this.renderDetailsColumn,
+      width: -50
+    },
+    {
+      id: "repository",
+      name: "Repository",
+      readonly: true,
+      renderCell: this.renderRepositoryColumn,
       width: -33
     },
     {
@@ -46,48 +82,31 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
       readonly: true,
       renderCell: this.renderReviewersColumn,
       width: -33
-    },
-    ColumnFill
+    }
   ];
 
-  constructor(props) {
+  constructor(props: PullRequestTableProps) {
     super(props);
-    this.gitClient = API.getClient(GitRestClient);
-    this.state = {
-      searchFilter: {
-        creatorId: undefined,
-        includeLinks: undefined,
-        repositoryId: undefined,
-        reviewerId: undefined,
-        sourceRefName: undefined,
-        sourceRepositoryId: undefined,
-        status: PullRequestStatus.Active,
-        targetRefName: undefined
-      }
-    };
-  }
-
-  componentDidMount() {
-    this.initialize();
-  }
-
-  private async initialize() {
-    const pullRequests = await this.gitClient.getPullRequestsByProject(this.props.project, this.state.searchFilter);
-    this.setState({
-      pullRequests: new ArrayItemProvider<PullRequestTableItem>(pullRequests.map(pr => {
-        return {
-          author: pr.createdBy,
-          title: pr.title,
-          reviewers: pr.reviewers
-        };
-      }))
-    });
   }
 
   render() {
+    if (this.props.pullRequests.length === 0) {
+      return <ZeroData
+        primaryText="No pull requests"
+        secondaryText={
+          <span>No pull requests could be found.</span>
+        }
+        imageAltText="Bars"
+        imagePath={zeroImage}
+        actionText="Button"
+        actionType={ZeroDataActionType.ctaButton}
+        onActionClick={(event, item) =>
+          alert("Hey, you clicked the button for " + item!.primaryText)
+        } />;
+    }
     return (
       <Card className="flex-grow bolt-table-card" contentProps={{ contentPadding: false }}>
-        {this.state.pullRequests && <Table columns={this.fixedColumns} itemProvider={this.state.pullRequests} role="table" />}
+        <Table columns={this.fixedColumns} itemProvider={new ArrayItemProvider<PullRequestTableItem>(this.props.pullRequests)} role="table" />
       </Card>
     );
   }
@@ -109,6 +128,27 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.author.displayName}</span>
+          </Tooltip>
+        </div>
+      </SimpleTableCell>
+    );
+  }
+
+  private renderRepositoryColumn(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PullRequestTableItem>,
+    tableItem: PullRequestTableItem
+  ): JSX.Element {
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        <div className="flex-row scroll-hidden">
+          <Tooltip overflowOnly={true}>
+            <span className="text-ellipsis">{tableItem.repo.name}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>

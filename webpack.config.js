@@ -7,13 +7,13 @@ module.exports = {
     filename: "bundle.js"
   },
   resolve: {
-    extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
+    extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".scss"]
   },
   module: {
     rules: [
       {
           test: /\.scss$/,
-          use: ["style-loader", "css-loader", "azure-devops-ui/buildScripts/css-variables-loader", "sass-loader"]
+          use: ["style-loader", { loader: "css-loader", options: { modules: true }}, "azure-devops-ui/buildScripts/css-variables-loader", "sass-loader"]
       },
       {
           test: /\.css$/,
@@ -21,6 +21,12 @@ module.exports = {
       },
       {
           test: /\.woff$/,
+          use: [{
+              loader: 'base64-inline-loader'
+          }]
+      },
+      {
+          test: /\.png$/,
           use: [{
               loader: 'base64-inline-loader'
           }]
