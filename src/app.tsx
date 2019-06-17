@@ -1,12 +1,25 @@
 import { CommonServiceIds, IProjectPageService } from "azure-devops-extension-api";
 import * as SDK from "azure-devops-extension-sdk";
-import { Header } from "azure-devops-ui/Header";
+import { Header, TitleSize } from "azure-devops-ui/Header";
 import { Page } from "azure-devops-ui/Page";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
 import * as React from "react";
 import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
+import { IHeaderCommandBarItem } from "azure-devops-ui/HeaderCommandBar";
 
-export class App extends React.Component<{}, {projectName: string}> {
+const headerCommands: IHeaderCommandBarItem[] = [
+  {
+    id: "new-pull-request",
+    text: "New pull request",
+    onActivate: () => {
+      alert("new pr button clicked");
+    },
+    isPrimary: true,
+    important: true
+  }
+];
+
+export class App extends React.Component<{}, { projectName: string }> {
   constructor(props) {
     super(props);
     this.state = { projectName: undefined };
@@ -29,9 +42,11 @@ export class App extends React.Component<{}, {projectName: string}> {
   render() {
     return (<Surface background={SurfaceBackground.normal}>
       <Page>
-        <Header title="All Pull Requests" />
+        <Header title="All Repositories"
+          titleSize={TitleSize.Large}
+          commandBarItems={headerCommands} />
         <section className="page-content page-content-top">
-          { this.state.projectName && <PullRequestTable project={this.state.projectName} /> }
+          {this.state.projectName && <PullRequestTable project={this.state.projectName} />}
         </section>
       </Page>
     </Surface>);

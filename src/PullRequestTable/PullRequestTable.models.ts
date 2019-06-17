@@ -1,22 +1,18 @@
+import { GitPullRequestSearchCriteria, IdentityRefWithVote } from "azure-devops-extension-api/Git";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
-import { IdentityRefWithVote } from "azure-devops-extension-api/Git";
-import { ISimpleTableCell } from "azure-devops-ui/Table";
-import { ISimpleListCell } from "azure-devops-ui/List";
+import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 
-export interface PullRequest {
-  author: IdentityRef;
-  id: number;
-  title: string;
-  repo: string;
-  baseBranch: string;
-  targetBranch: string;
-  buildStatus: any;
-  vote: number;
-  reviewers: IdentityRefWithVote[];
+export interface PullRequestTableProps {
+  project: string;
 }
 
-export interface PullRequestTableItem extends ISimpleTableCell {
-  author: string;
+export interface PullRequestTableState {
+  searchFilter: GitPullRequestSearchCriteria;
+  pullRequests?: ArrayItemProvider<PullRequestTableItem>;
+}
+
+export interface PullRequestTableItem {
+  author: IdentityRef;
   title: string;
-  reviewers: ISimpleListCell;
+  reviewers: IdentityRefWithVote[];
 }
