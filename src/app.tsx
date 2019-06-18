@@ -24,18 +24,6 @@ enum TabType {
   drafts = "drafts"
 }
 
-const headerCommands: IHeaderCommandBarItem[] = [
-  {
-    id: "new-pull-request",
-    text: "New pull request",
-    onActivate: () => {
-      alert("new pr button clicked");
-    },
-    isPrimary: true,
-    important: true
-  }
-];
-
 function voteNumberToVote(vote: number): Vote {
   let voteObj: Vote;
   switch (vote) {
@@ -48,7 +36,7 @@ function voteNumberToVote(vote: number): Vote {
       break;
     case -5:
       voteObj = {
-        status: Statuses.Waiting,
+        status: Object.assign(Statuses.Waiting, { color: Statuses.Warning.color }),
         message: "Waiting for the author",
         order: 1
       };
@@ -105,7 +93,7 @@ export class App extends React.Component<{}, AppState> {
     super(props);
     this.gitClient = API.getClient(GitRestClient);
     this.filter = new Filter();
-    this.state = { pullRequests: [], hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: 0, draftPrBadge: 0 };
+    this.state = { pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: 0, draftPrBadge: 0 };
   }
 
   componentDidMount() {
@@ -113,12 +101,11 @@ export class App extends React.Component<{}, AppState> {
   }
 
   render() {
-    console.log(styles);
     return (<Surface background={SurfaceBackground.neutral}>
       <Page className={`flex-grow ${styles.fullHeight}`}>
         <Header title="All Repositories"
           titleSize={TitleSize.Large}
-          commandBarItems={headerCommands} />
+          commandBarItems={[]} />
         <TabBar selectedTabId={this.state.selectedTabId} onSelectedTabChanged={this.onSelectedTabChanged} renderAdditionalContent={this.renderTabBarCommands}>
           <Tab id={TabType.active} name="Active Pull Requests" badgeCount={this.state.activePrBadge} />
           <Tab id={TabType.drafts} name="My Drafts" badgeCount={this.state.draftPrBadge} />
@@ -176,16 +163,18 @@ export class App extends React.Component<{}, AppState> {
   }
 
   private renderTabContents() {
-    if (this.state.pullRequests && this.state.hostUrl) {
-      if (this.state.selectedTabId === TabType.active) {
-        return <section className="page-content page-content-top">
-          <PullRequestTable pullRequests={this.state.pullRequests.filter(x => !x.isDraft)} hostUrl={this.state.hostUrl} />
-        </section>;
-      } else if (this.state.selectedTabId === TabType.drafts) {
-        return <section className="page-content page-content-top">
-          <PullRequestTable pullRequests={this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id)} hostUrl={this.state.hostUrl} />
-        </section>;
-      }
+    if (this.state.selectedTabId === TabType.active) {
+      return <section className="page-content page-content-top">
+        <PullRequestTable pullRequests={
+            this.state.pullRequests ? this.state.pullRequests.filter(x => !x.isDraft) : undefined
+          } hostUrl={this.state.hostUrl} filter={this.filter} />
+      </section>;
+    } else if (this.state.selectedTabId === TabType.drafts) {
+      return <section className="page-content page-content-top">
+        <PullRequestTable pullRequests={
+            this.state.pullRequests ? this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id) : undefined
+          } hostUrl={this.state.hostUrl} filter={this.filter} />
+      </section>;
     }
     return <div></div>;
   }

@@ -2,6 +2,7 @@ import { GitRepository, IdentityRefWithVote } from "azure-devops-extension-api/G
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { IFilter } from "azure-devops-ui/Utilities/Filter";
 import { Vote } from "../app.models";
+import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
 
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
@@ -10,6 +11,7 @@ export interface PullRequestTableProps {
 }
 
 export interface PullRequestTableState {
+  pullRequestProvider: ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>;
 }
 
 export interface PullRequestTableItem {
