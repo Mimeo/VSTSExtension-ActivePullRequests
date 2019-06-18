@@ -6,7 +6,7 @@
   "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile"],
   "description": "View all active pull requests across all repos in a project.",
   "public": true,
-  "publisher": "mimeo",
+  "publisher": "mimeo-vs-marketplace",
   "icons": {
     "default": "static/images/pullRequest.png"
   },
@@ -77,7 +77,11 @@
       "properties": {
         "name": "All Active Pull Requests",
         "order": 100,
-        "uri": "static/index.html"
+        "uri": "static/index.html",
+        "icon": {
+          "light": "static/images/pullRequest_light.png",
+          "dark": "static/images/pullRequest_dark.png"
+        }
       }
     }
   ]

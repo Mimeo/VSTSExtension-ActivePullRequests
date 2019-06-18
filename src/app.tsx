@@ -2,21 +2,22 @@ import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IProjectPageService } from "azure-devops-extension-api";
 import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
+import { IUserContext } from "azure-devops-extension-sdk";
 import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import { FilterBar } from "azure-devops-ui/FilterBar";
 import { Header, TitleSize } from "azure-devops-ui/Header";
 import { HeaderCommandBarWithFilter, IHeaderCommandBarItem } from "azure-devops-ui/HeaderCommandBar";
 import { Page } from "azure-devops-ui/Page";
+import { Statuses } from "azure-devops-ui/Status";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
 import { Tab, TabBar } from "azure-devops-ui/Tabs";
 import { KeywordFilterBarItem } from "azure-devops-ui/TextFilterBarItem";
 import { Filter, IFilter } from "azure-devops-ui/Utilities/Filter";
 import * as React from "react";
-import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
-import { PullRequestTableItem } from "./PullRequestTable/PullRequestTable.models";
-import { IUserContext } from "azure-devops-extension-sdk";
+import { AppState, Vote } from "./app.models";
 import * as styles from "./app.scss";
+import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
 
 enum TabType {
   active = "active",
@@ -35,12 +36,53 @@ const headerCommands: IHeaderCommandBarItem[] = [
   }
 ];
 
-interface AppState {
-  hostUrl: string;
-  pullRequests: PullRequestTableItem[];
-  selectedTabId: string;
-  activePrBadge: number;
-  draftPrBadge: number;
+function voteNumberToVote(vote: number): Vote {
+  let voteObj: Vote;
+  switch (vote) {
+    case -10:
+      voteObj = {
+        status: Statuses.Failed,
+        message: "Rejected",
+        order: 0
+      };
+      break;
+    case -5:
+      voteObj = {
+        status: Statuses.Waiting,
+        message: "Waiting for the author",
+        order: 1
+      };
+      break;
+    case -1:
+      voteObj = {
+        status: Statuses.Queued,
+        message: "No Response (not required)",
+        order: 4
+      };
+      break;
+    case 0:
+      voteObj = {
+        status: Object.assign(Statuses.Waiting, { color: Statuses.Failed.color }),
+        message: "Response Required",
+        order: 3
+      };
+      break;
+    case 5:
+      voteObj = {
+        status: Statuses.Success,
+        message: "Approved with suggestions",
+        order: 2
+      };
+      break;
+    case 10:
+      voteObj = {
+        status: Statuses.Success,
+        message: "Approved",
+        order: 2
+      };
+      break;
+  }
+  return voteObj;
 }
 
 export class App extends React.Component<{}, AppState> {
@@ -102,6 +144,7 @@ export class App extends React.Component<{}, AppState> {
     if (project) {
       const pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
         .map(pr => {
+          const selfWithVote = pr.reviewers.find(x => x.id === pr.createdBy.id);
           return {
             id: pr.pullRequestId,
             isDraft: pr.isDraft,
@@ -110,11 +153,13 @@ export class App extends React.Component<{}, AppState> {
             repo: pr.repository,
             baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
             targetBranch: pr.targetRefName.replace("refs/heads/", ""),
+            vote: voteNumberToVote(selfWithVote ? selfWithVote.vote : -1),
             reviewers: pr.reviewers,
             link: pr.url
           };
         });
-      this.setState({ hostUrl: `https://dev.azure.com/${hostContext.name}/${project.name}`,
+      this.setState({
+        hostUrl: `https://dev.azure.com/${hostContext.name}/${project.name}`,
         pullRequests: pullRequests,
         activePrBadge: pullRequests.filter(x => !x.isDraft).length,
         draftPrBadge: pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id).length

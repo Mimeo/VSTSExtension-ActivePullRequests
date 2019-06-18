@@ -1,6 +1,7 @@
 import { GitRepository, IdentityRefWithVote } from "azure-devops-extension-api/Git";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { IFilter } from "azure-devops-ui/Utilities/Filter";
+import { Vote } from "../app.models";
 
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
@@ -19,5 +20,6 @@ export interface PullRequestTableItem {
   repo: GitRepository;
   baseBranch: string;
   targetBranch: string;
+  vote: Vote;
   reviewers: IdentityRefWithVote[];
 }

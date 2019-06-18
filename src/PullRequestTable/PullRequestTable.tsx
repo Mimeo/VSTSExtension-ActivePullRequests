@@ -10,6 +10,7 @@ import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } fr
 import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 import { ZeroData, ZeroDataActionType } from "azure-devops-ui/ZeroData";
 import * as zeroImage from "./../../static/images/pullRequest.png";
+import { Status, StatusSize } from "azure-devops-ui/Status";
 
 function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   return {
@@ -39,14 +40,16 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         } line2={
           <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
             <Tooltip overflowOnly={true}>
-              <Link className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
-                <Icon iconName="OpenSource" />{tableItem.baseBranch}
+              <Link href={`${this.props.hostUrl}/_git/${tableItem.repo.name}?version=GB${tableItem.baseBranch}`}
+                className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+                <Icon iconName="OpenSource" /><span className="text-ellipsis">{tableItem.baseBranch}</span>
               </Link>
             </Tooltip>
             <Icon iconName="ChevronRightSmall" size={IconSize.small} />
             <Tooltip overflowOnly={true}>
-              <Link className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
-                <Icon iconName="OpenSource" />{tableItem.targetBranch}
+              <Link href={`${this.props.hostUrl}/_git/${tableItem.repo.name}?version=GB${tableItem.targetBranch}`}
+                className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+                <Icon iconName="OpenSource" /><span className="text-ellipsis">{tableItem.targetBranch}</span>
               </Link>
             </Tooltip>
           </div>} />
@@ -62,6 +65,7 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
       width: 200
     },
     {
+      columnLayout: TableColumnLayout.twoLine,
       id: "details",
       name: "Details",
       readonly: true,
@@ -73,7 +77,15 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
       name: "Repository",
       readonly: true,
       renderCell: this.renderRepositoryColumn,
-      width: -33
+      width: 200
+    },
+    {
+      columnLayout: TableColumnLayout.singleLinePrefix,
+      id: "my-vote",
+      name: "My Vote",
+      readonly: true,
+      renderCell: this.renderMyVoteColumn,
+      width: 225
     },
     {
       columnLayout: TableColumnLayout.none,
@@ -149,6 +161,28 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.repo.name}</span>
+          </Tooltip>
+        </div>
+      </SimpleTableCell>
+    );
+  }
+
+  private renderMyVoteColumn(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PullRequestTableItem>,
+    tableItem: PullRequestTableItem
+  ): JSX.Element {
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        <Status {...tableItem.vote.status} size={StatusSize.m} className="icon-margin" />
+        <div className="flex-row scroll-hidden">
+          <Tooltip overflowOnly={true}>
+            <span className="text-ellipsis">{tableItem.vote.message}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>
