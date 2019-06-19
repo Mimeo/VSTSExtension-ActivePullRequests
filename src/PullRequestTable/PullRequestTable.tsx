@@ -39,7 +39,7 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         actionText="Refresh"
         actionType={ZeroDataActionType.ctaButton}
         onActionClick={(event, item) =>
-          alert("Hey, you clicked the button for " + item!.primaryText)
+          window.location.reload()
         } />;
     }
     return (

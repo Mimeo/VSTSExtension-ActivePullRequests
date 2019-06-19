@@ -27,52 +27,39 @@ enum TabType {
 }
 
 function getVoteStatus(vote: number): Vote {
-  let voteObj: Vote;
   switch (vote) {
     case -10:
-      voteObj = {
+      return {
         status: Statuses.Failed,
         message: "Rejected",
         order: 0
       };
-      break;
     case -5:
-      voteObj = {
+      return {
         status: Object.assign(Statuses.Waiting, { color: Statuses.Warning.color }),
-        message: "Waiting for the author",
+        message: "Waiting for the Author",
         order: 1
       };
-      break;
     case -1:
-      voteObj = {
+      return {
         status: Statuses.Queued,
-        message: "No Response (not required)",
+        message: "No Response",
         order: 4
       };
-      break;
     case 0:
-      voteObj = {
+      return {
         status: Object.assign(Statuses.Waiting, { color: Statuses.Failed.color }),
         message: "Response Required",
         order: 3
       };
-      break;
     case 5:
-      voteObj = {
-        status: Statuses.Success,
-        message: "Approved with suggestions",
-        order: 2
-      };
-      break;
     case 10:
-      voteObj = {
+      return {
         status: Statuses.Success,
         message: "Approved",
         order: 2
       };
-      break;
   }
-  return voteObj;
 }
 
 function getStatusFromBuild(build: Build): BuildDisplayStatus {
