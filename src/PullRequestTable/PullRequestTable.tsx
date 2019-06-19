@@ -7,18 +7,28 @@ import * as zeroImage from "./../../static/images/pullRequest.png";
 import { getColumnTemplate as getColumns } from "./PullRequestTable.columns";
 import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } from "./PullRequestTable.models";
 
+function areArraysEqual(arr1: any[], arr2: any[]): boolean {
+  if (arr1 == null || arr2 == null) { return false; }
+  if (arr1.length !== arr2.length) { return false; }
+  for (let i = arr1.length; i--;) {
+    if (arr1[i] !== arr2[i]) { return false; }
+  }
+  return true;
+}
+
 export class PullRequestTable extends React.Component<PullRequestTableProps, PullRequestTableState> {
   constructor(props: PullRequestTableProps) {
     super(props);
-    this.state = { pullRequestProvider: new ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>(
-      this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem | undefined>(undefined))
-    )};
+    this.state = {
+      pullRequestProvider: new ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>(
+        this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem | undefined>(undefined))
+      )
+    };
   }
 
   componentDidUpdate(prevProps: PullRequestTableProps, prevState: PullRequestTableState) {
-    if (prevProps !== this.props && ((prevState.pullRequestProvider.value !== this.props.pullRequests && this.props.pullRequests !== undefined)
-      || prevProps.filter.getState() !== this.props.filter.getState())) {
-      console.log(this.props.filter.getState());
+    if (!areArraysEqual(prevProps.pullRequests, this.props.pullRequests) || prevProps.filter !== this.props.filter) {
+      console.log(this.props.filter);
       this.setState({
         pullRequestProvider: new ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>(
           this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem | undefined>(undefined))
@@ -52,7 +62,8 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
   private filterItems(prs: PullRequestTableItem[]) {
     if (prs == null) { return prs; }
     const nullSafe = (obj, key) => obj[key] ? obj[key].value : "";
-    const filterState = this.props.filter.getState();
-    return prs.filter(x => x.title.includes(nullSafe(filterState, "keyword")) || x.author.displayName.includes(nullSafe(filterState, "keyword")));
+    const filterState = this.props.filter;
+    return prs.filter(x => x.title.toLowerCase().includes(nullSafe(filterState, "keyword").toLowerCase()) ||
+      x.author.displayName.toLowerCase().includes(nullSafe(filterState, "keyword").toLowerCase()));
   }
 }

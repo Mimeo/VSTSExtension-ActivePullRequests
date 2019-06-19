@@ -14,7 +14,7 @@ import { Statuses } from "azure-devops-ui/Status";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
 import { Tab, TabBar } from "azure-devops-ui/Tabs";
 import { KeywordFilterBarItem } from "azure-devops-ui/TextFilterBarItem";
-import { Filter, IFilter } from "azure-devops-ui/Utilities/Filter";
+import { Filter, IFilter, FILTER_CHANGE_EVENT } from "azure-devops-ui/Utilities/Filter";
 import * as React from "react";
 import { AppState } from "./app.models";
 import * as styles from "./app.scss";
@@ -142,7 +142,8 @@ export class App extends React.Component<{}, AppState> {
     this.gitClient = API.getClient(GitRestClient);
     this.buildClient = API.getClient(BuildRestClient);
     this.filter = new Filter();
-    this.state = { pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined };
+    this.state = { filter: {}, pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined };
+    this.filter.subscribe(() => this.setState({ filter: this.filter.getState() }), FILTER_CHANGE_EVENT);
   }
 
   componentDidMount() {
@@ -222,13 +223,13 @@ export class App extends React.Component<{}, AppState> {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
           this.state.pullRequests ? this.state.pullRequests.filter(x => !x.isDraft) : undefined
-        } hostUrl={this.state.hostUrl} filter={this.filter} />
+        } hostUrl={this.state.hostUrl} filter={this.state.filter} />
       </section>;
     } else if (this.state.selectedTabId === TabType.drafts) {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
           this.state.pullRequests ? this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id) : undefined
-        } hostUrl={this.state.hostUrl} filter={this.filter} />
+        } hostUrl={this.state.hostUrl} filter={this.state.filter} />
       </section>;
     }
     return <div></div>;

@@ -1,6 +1,6 @@
 import { GitRepository, IdentityRefWithVote } from "azure-devops-extension-api/Git";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
-import { IFilter } from "azure-devops-ui/Utilities/Filter";
+import { IFilterState } from "azure-devops-ui/Utilities/Filter";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
 import { IStatusProps } from "azure-devops-ui/Status";
 import { Build } from "azure-devops-extension-api/Build";
@@ -8,7 +8,7 @@ import { Build } from "azure-devops-extension-api/Build";
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
   hostUrl: string;
-  filter?: IFilter;
+  filter: IFilterState;
 }
 
 export interface PullRequestTableState {
