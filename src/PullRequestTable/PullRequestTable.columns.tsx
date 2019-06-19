@@ -8,6 +8,8 @@ import { VssPersona, IIdentityDetailsProvider } from "azure-devops-ui/VssPersona
 import { Status, StatusSize } from "azure-devops-ui/Status";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
+import { getVoteStatus } from "./PullRequestTable.helpers";
+import * as styles from "./PullRequestTable.columns.scss";
 
 export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTableItem>[] {
   function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
@@ -132,13 +134,19 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
         {
           tableItem.reviewers.map(reviewer =>
-            <VssPersona identityDetailsProvider={summonPersona(reviewer)} className="icon-margin" size={"small"} />)
+            <span className={`${styles.personaWithVote} icon-margin`}>
+              <VssPersona identityDetailsProvider={summonPersona(reviewer)} size={"small"} />
+              { Math.abs(reviewer.vote) > 1 ? (
+                <span className={styles.voteIcon}><Status {...getVoteStatus(reviewer.vote).status} size={StatusSize.s} /></span>
+              ) : "" }
+            </span>
+          )
         }
       </SimpleTableCell>
     );
   };
 
-  var columns = [
+  const columns = [
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "author",
