@@ -1,5 +1,6 @@
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IProjectPageService } from "azure-devops-extension-api";
+import { Build, BuildReason, BuildRestClient, BuildResult, BuildStatus } from "azure-devops-extension-api/Build";
 import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
@@ -7,7 +8,7 @@ import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import { FilterBar } from "azure-devops-ui/FilterBar";
 import { Header, TitleSize } from "azure-devops-ui/Header";
-import { HeaderCommandBarWithFilter, IHeaderCommandBarItem } from "azure-devops-ui/HeaderCommandBar";
+import { HeaderCommandBarWithFilter } from "azure-devops-ui/HeaderCommandBar";
 import { Page } from "azure-devops-ui/Page";
 import { Statuses } from "azure-devops-ui/Status";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
@@ -15,16 +16,17 @@ import { Tab, TabBar } from "azure-devops-ui/Tabs";
 import { KeywordFilterBarItem } from "azure-devops-ui/TextFilterBarItem";
 import { Filter, IFilter } from "azure-devops-ui/Utilities/Filter";
 import * as React from "react";
-import { AppState, Vote } from "./app.models";
+import { AppState } from "./app.models";
 import * as styles from "./app.scss";
 import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
+import { Vote, BuildDisplayStatus } from "./PullRequestTable/PullRequestTable.models";
 
 enum TabType {
   active = "active",
   drafts = "drafts"
 }
 
-function voteNumberToVote(vote: number): Vote {
+function getVoteStatus(vote: number): Vote {
   let voteObj: Vote;
   switch (vote) {
     case -10:
@@ -73,9 +75,68 @@ function voteNumberToVote(vote: number): Vote {
   return voteObj;
 }
 
+function getStatusFromBuild(build: Build): BuildDisplayStatus {
+  if (build == null) {
+    return { message: "" };
+  }
+  switch (build.status) {
+    case BuildStatus.NotStarted:
+      return {
+        message: "Not Started",
+        icon: Statuses.Waiting
+      };
+    case BuildStatus.InProgress:
+      return {
+        message: "In Progress",
+        icon: Statuses.Running
+      };
+    case BuildStatus.Postponed:
+      return {
+        message: "Postponed",
+        icon: Statuses.Waiting
+      };
+    case BuildStatus.Cancelling:
+      return {
+        message: "Cancelling",
+        icon: Statuses.Running
+      };
+    case BuildStatus.Completed:
+      switch (build.result) {
+        case BuildResult.Succeeded:
+          return {
+            message: "Succeeded",
+            icon: Statuses.Success
+          };
+        case BuildResult.PartiallySucceeded:
+          return {
+            message: "Partially Succeeded",
+            icon: Statuses.Success
+          };
+        case BuildResult.Canceled:
+          return {
+            message: "Canceled",
+            icon: Statuses.Canceled
+          };
+        case BuildResult.Failed:
+          return {
+            message: "Failed",
+            icon: Statuses.Failed
+          };
+        default:
+          return {
+            message: "Completed",
+            icon: Statuses.Success
+          };
+      }
+    default:
+      return { message: "" };
+  }
+}
+
 export class App extends React.Component<{}, AppState> {
   private showFilter = new ObservableValue<boolean>(false);
   private gitClient: GitRestClient;
+  private buildClient: BuildRestClient;
   private userContext: IUserContext;
   private filter: IFilter;
   private searchFilter: {
@@ -92,8 +153,9 @@ export class App extends React.Component<{}, AppState> {
   constructor(props) {
     super(props);
     this.gitClient = API.getClient(GitRestClient);
+    this.buildClient = API.getClient(BuildRestClient);
     this.filter = new Filter();
-    this.state = { pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: 0, draftPrBadge: 0 };
+    this.state = { pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined };
   }
 
   componentDidMount() {
@@ -129,9 +191,11 @@ export class App extends React.Component<{}, AppState> {
     const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
     const project = await projectService.getProject();
     if (project) {
+      const builds = await this.buildClient.getBuilds(project.name, null, null, null, null, null, null, BuildReason.PullRequest);
       const pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
         .map(pr => {
           const selfWithVote = pr.reviewers.find(x => x.id === pr.createdBy.id);
+          const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
           return {
             id: pr.pullRequestId,
             isDraft: pr.isDraft,
@@ -140,7 +204,11 @@ export class App extends React.Component<{}, AppState> {
             repo: pr.repository,
             baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
             targetBranch: pr.targetRefName.replace("refs/heads/", ""),
-            vote: voteNumberToVote(selfWithVote ? selfWithVote.vote : -1),
+            vote: getVoteStatus(selfWithVote ? selfWithVote.vote : -1),
+            buildDetails: {
+              build: latestBuild,
+              status: getStatusFromBuild(latestBuild)
+            },
             reviewers: pr.reviewers,
             link: pr.url
           };
@@ -166,14 +234,14 @@ export class App extends React.Component<{}, AppState> {
     if (this.state.selectedTabId === TabType.active) {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
-            this.state.pullRequests ? this.state.pullRequests.filter(x => !x.isDraft) : undefined
-          } hostUrl={this.state.hostUrl} filter={this.filter} />
+          this.state.pullRequests ? this.state.pullRequests.filter(x => !x.isDraft) : undefined
+        } hostUrl={this.state.hostUrl} filter={this.filter} />
       </section>;
     } else if (this.state.selectedTabId === TabType.drafts) {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
-            this.state.pullRequests ? this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id) : undefined
-          } hostUrl={this.state.hostUrl} filter={this.filter} />
+          this.state.pullRequests ? this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id) : undefined
+        } hostUrl={this.state.hostUrl} filter={this.filter} />
       </section>;
     }
     return <div></div>;

@@ -7,6 +7,7 @@ import { Icon, IconSize } from "azure-devops-ui/Icon";
 import { VssPersona, IIdentityDetailsProvider } from "azure-devops-ui/VssPersona";
 import { Status, StatusSize } from "azure-devops-ui/Status";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
+import { ObservableValue } from "azure-devops-ui/Core/Observable";
 
 export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTableItem>[] {
   function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
@@ -54,7 +55,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         } line2={
           <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
             <Link href={`${hostUri}/_git/${tableItem.repo.name}?version=GB${tableItem.baseBranch}`}
-              className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
                 <span className="text-ellipsis">{tableItem.baseBranch}</span>
@@ -62,7 +63,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
             </Link>
             <Icon iconName="ChevronRightSmall" size={IconSize.small} />
             <Link href={`${hostUri}/_git/${tableItem.repo.name}?version=GB${tableItem.targetBranch}`}
-              className="monospaced-text text-ellipsis flex-row flex-baseline bolt-table-link bolt-table-inline-link" subtle={true}>
+              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
                 <span className="text-ellipsis">{tableItem.targetBranch}</span>
@@ -82,6 +83,23 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.repo.name}</span>
+          </Tooltip>
+        </div>
+      </SimpleTableCell>
+    );
+  };
+
+  const renderBuildStatusColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        <Status {...tableItem.buildDetails.status.icon} size={StatusSize.m} className="icon-margin" />
+        <div className="flex-row scroll-hidden">
+          <Tooltip overflowOnly={true}>
+            <span className="text-ellipsis">{tableItem.buildDetails.status.message}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>
@@ -120,14 +138,16 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
     );
   };
 
-  return [
+  var columns = [
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "author",
       name: "Author",
       readonly: true,
       renderCell: renderAuthorColumn,
-      width: 200
+      onSize: onSize,
+      width: new ObservableValue(-25),
+      minWidth: 56
     },
     {
       columnLayout: TableColumnLayout.twoLine,
@@ -135,22 +155,28 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       name: "Details",
       readonly: true,
       renderCell: renderDetailsColumn,
-      width: -50
+      onSize: onSize,
+      width: new ObservableValue(-50),
+      minWidth: 150
     },
     {
       id: "repository",
       name: "Repository",
       readonly: true,
       renderCell: renderRepositoryColumn,
-      width: 200
+      onSize: onSize,
+      width: new ObservableValue(-25),
+      minWidth: 75
     },
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "build-status",
       name: "Build Status",
       readonly: true,
-      renderCell: renderMyVoteColumn,
-      width: 200
+      renderCell: renderBuildStatusColumn,
+      onSize: onSize,
+      width: new ObservableValue(-25),
+      minWidth: 150
     },
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
@@ -158,7 +184,9 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       name: "My Vote",
       readonly: true,
       renderCell: renderMyVoteColumn,
-      width: 225
+      onSize: onSize,
+      width: new ObservableValue(-25),
+      minWidth: 150
     },
     {
       columnLayout: TableColumnLayout.none,
@@ -166,7 +194,14 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       name: "Reviewers",
       readonly: true,
       renderCell: renderReviewersColumn,
-      width: -33
+      width: new ObservableValue(-33),
+      minWidth: 150
     }
   ];
+
+  function onSize(event: MouseEvent, index: number, width: number) {
+    (columns[index].width as ObservableValue<number>).value = width;
+  }
+
+  return columns;
 }
