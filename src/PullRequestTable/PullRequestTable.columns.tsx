@@ -155,7 +155,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
     );
   };
 
-  const columns = [
+  let columns = [
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "author",
@@ -164,11 +164,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderAuthorColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 56,
-      sortProps: {
-        ariaLabelAscending: "Sorted A to Z",
-        ariaLabelDescending: "Sorted Z to A"
-      }
+      minWidth: 56
     },
     {
       columnLayout: TableColumnLayout.twoLine,
@@ -178,11 +174,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderDetailsColumn,
       onSize: onSize,
       width: new ObservableValue(-50),
-      minWidth: 150,
-      sortProps: {
-        ariaLabelAscending: "Sorted by ID low to high",
-        ariaLabelDescending: "Sorted by ID high to low"
-      }
+      minWidth: 150
     },
     {
       id: "repository",
@@ -191,11 +183,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderRepositoryColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 75,
-      sortProps: {
-        ariaLabelAscending: "Sorted A to Z",
-        ariaLabelDescending: "Sorted Z to A"
-      }
+      minWidth: 75
     },
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
@@ -224,11 +212,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       readonly: true,
       renderCell: renderReviewersColumn,
       width: new ObservableValue(-33),
-      minWidth: 150,
-      sortProps: {
-        ariaLabelAscending: "Sorted least to greatest",
-        ariaLabelDescending: "Sorted greatest to least"
-      }
+      minWidth: 150
     }
   ];
 
@@ -238,26 +222,3 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
 
   return columns;
 }
-
-export const sortFunctions = [
-  // Sort on Author column
-  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
-    return item1.author.displayName!.localeCompare(item2.author.displayName!);
-  },
-  // Sort on Details column
-  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
-    return item1.id - item2.id;
-  },
-  // Sort on Repository column
-  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
-    return item1.repo.name!.localeCompare(item2.repo.name!);
-  },
-  // Don't sort on Build Status column
-  null,
-  // Don't sort on My Vote column
-  null,
-  // Sort on Reviewers column
-  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
-    return item1.reviewers.length - item2.reviewers.length;
-  },
-];

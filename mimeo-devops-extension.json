@@ -1,12 +1,12 @@
 {
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "1.1.0",
+  "version": "1.0.174",
   "name": "All Active Pull Requests",
   "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile"],
   "description": "View all active pull requests across all repos in a project.",
   "public": true,
-  "publisher": "mimeo-vs-marketplace",
+  "publisher": "sandhead",
   "icons": {
     "default": "static/images/pullRequest.png"
   },

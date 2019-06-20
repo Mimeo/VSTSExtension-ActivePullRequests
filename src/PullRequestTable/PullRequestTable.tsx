@@ -1,10 +1,10 @@
 import { Card } from "azure-devops-ui/Card";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
-import { ColumnSorting, sortItems, SortOrder, Table } from "azure-devops-ui/Table";
+import { Table } from "azure-devops-ui/Table";
 import { ZeroData, ZeroDataActionType } from "azure-devops-ui/ZeroData";
 import * as React from "react";
 import * as zeroImage from "./../../static/images/pullRequest.png";
-import { getColumnTemplate as getColumns, sortFunctions } from "./PullRequestTable.columns";
+import { getColumnTemplate as getColumns } from "./PullRequestTable.columns";
 import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } from "./PullRequestTable.models";
 
 function areArraysEqual(arr1: any[], arr2: any[]): boolean {
@@ -58,31 +58,10 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
     }
     return (
       <Card className="flex-grow bolt-table-card" contentProps={{ contentPadding: false }}>
-        <Table behaviors={[this.sortingBehavior]} columns={this.state.columns} itemProvider={this.state.pullRequestProvider} role="table" />
+        <Table columns={this.state.columns} itemProvider={this.state.pullRequestProvider} role="table" />
       </Card>
     );
   }
-
-  // Create the sorting behavior (delegate that is called when a column is sorted).
-  private sortingBehavior = new ColumnSorting<PullRequestTableItem>(
-    (
-      columnIndex: number,
-      proposedSortOrder: SortOrder,
-      event: React.KeyboardEvent<HTMLElement> | React.MouseEvent<HTMLElement>
-    ) => {
-      this.setState({
-        pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(
-          sortItems<PullRequestTableItem>(
-            columnIndex,
-            proposedSortOrder,
-            sortFunctions,
-            this.state.columns,
-            this.state.filteredPrs
-          ).map(x => new ObservableValue(x))
-        )
-      });
-    }
-  );
 
   private nullSafeOrDefault = (obj, key, def: any = "") => obj[key] ? obj[key].value : def;
   private filterItems(prs: PullRequestTableItem[]): ObservableValue<PullRequestTableItem>[] {
