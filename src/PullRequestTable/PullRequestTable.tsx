@@ -1,10 +1,10 @@
 import { Card } from "azure-devops-ui/Card";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
-import { Table } from "azure-devops-ui/Table";
+import { ColumnSorting, sortItems, SortOrder, Table } from "azure-devops-ui/Table";
 import { ZeroData, ZeroDataActionType } from "azure-devops-ui/ZeroData";
 import * as React from "react";
 import * as zeroImage from "./../../static/images/pullRequest.png";
-import { getColumnTemplate as getColumns } from "./PullRequestTable.columns";
+import { getColumnTemplate as getColumns, sortFunctions } from "./PullRequestTable.columns";
 import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } from "./PullRequestTable.models";
 
 function areArraysEqual(arr1: any[], arr2: any[]): boolean {
@@ -20,18 +20,22 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
   constructor(props: PullRequestTableProps) {
     super(props);
     this.state = {
-      pullRequestProvider: new ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>(
-        this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem | undefined>(undefined))
+      columns: getColumns(this.props.hostUrl),
+      filteredPrs: [],
+      pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(
+        this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem>(undefined))
       )
     };
   }
 
   componentDidUpdate(prevProps: PullRequestTableProps, prevState: PullRequestTableState) {
+    if (prevProps.hostUrl == null && this.props.hostUrl != null) {
+      this.setState({ columns: getColumns(this.props.hostUrl) });
+    }
     if (!areArraysEqual(prevProps.pullRequests, this.props.pullRequests) || prevProps.filter !== this.props.filter) {
-      console.log(this.props.filter);
       this.setState({
-        pullRequestProvider: new ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>(
-          this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem | undefined>(undefined))
+        pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(
+          this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem>(undefined))
         )
       });
     }
@@ -54,16 +58,45 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
     }
     return (
       <Card className="flex-grow bolt-table-card" contentProps={{ contentPadding: false }}>
-        <Table columns={getColumns(this.props.hostUrl)} itemProvider={this.state.pullRequestProvider} role="table" />
+        <Table behaviors={[this.sortingBehavior]} columns={this.state.columns} itemProvider={this.state.pullRequestProvider} role="table" />
       </Card>
     );
   }
 
-  private filterItems(prs: PullRequestTableItem[]) {
-    if (prs == null) { return prs; }
-    const nullSafe = (obj, key) => obj[key] ? obj[key].value : "";
-    const filterState = this.props.filter;
-    return prs.filter(x => x.title.toLowerCase().includes(nullSafe(filterState, "keyword").toLowerCase()) ||
-      x.author.displayName.toLowerCase().includes(nullSafe(filterState, "keyword").toLowerCase()));
+  // Create the sorting behavior (delegate that is called when a column is sorted).
+  private sortingBehavior = new ColumnSorting<PullRequestTableItem>(
+    (
+      columnIndex: number,
+      proposedSortOrder: SortOrder,
+      event: React.KeyboardEvent<HTMLElement> | React.MouseEvent<HTMLElement>
+    ) => {
+      this.setState({
+        pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(
+          sortItems<PullRequestTableItem>(
+            columnIndex,
+            proposedSortOrder,
+            sortFunctions,
+            this.state.columns,
+            this.state.filteredPrs
+          ).map(x => new ObservableValue(x))
+        )
+      });
+    }
+  );
+
+  private nullSafeOrDefault = (obj, key, def: any = "") => obj[key] ? obj[key].value : def;
+  private filterItems(prs: PullRequestTableItem[]): ObservableValue<PullRequestTableItem>[] {
+    if (prs == null) { return undefined; }
+    const filteredPrs = prs.filter(x => this.filterKeyword(x) && this.filterRepository(x));
+    this.setState({ filteredPrs: filteredPrs });
+    return filteredPrs.map(x => new ObservableValue(x));
+  }
+  private filterKeyword(pr: PullRequestTableItem) {
+    return pr.title.toLowerCase().includes(this.nullSafeOrDefault(this.props.filter, "keyword").toLowerCase()) ||
+      pr.author.displayName.toLowerCase().includes(this.nullSafeOrDefault(this.props.filter, "keyword").toLowerCase());
+  }
+  private filterRepository(pr: PullRequestTableItem) {
+    const selectedRepos: string[] = this.nullSafeOrDefault(this.props.filter, "repo", []);
+    return selectedRepos.length > 0 ? selectedRepos.includes(pr.repo.id) : true;
   }
 }

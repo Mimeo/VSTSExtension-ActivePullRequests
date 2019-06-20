@@ -4,6 +4,7 @@ import { IFilterState } from "azure-devops-ui/Utilities/Filter";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
 import { IStatusProps } from "azure-devops-ui/Status";
 import { Build } from "azure-devops-extension-api/Build";
+import { ITableColumn } from "azure-devops-ui/Table";
 
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
@@ -12,7 +13,9 @@ export interface PullRequestTableProps {
 }
 
 export interface PullRequestTableState {
-  pullRequestProvider: ObservableArray<PullRequestTableItem | ObservableValue<PullRequestTableItem | undefined>>;
+  columns: ITableColumn<PullRequestTableItem>[];
+  filteredPrs: PullRequestTableItem[];
+  pullRequestProvider: ObservableArray<ObservableValue<PullRequestTableItem>>;
 }
 
 export interface PullRequestTableItem {

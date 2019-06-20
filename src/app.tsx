@@ -1,26 +1,27 @@
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IProjectPageService } from "azure-devops-extension-api";
-import { Build, BuildReason, BuildRestClient, BuildResult, BuildStatus } from "azure-devops-extension-api/Build";
+import { BuildReason, BuildRestClient } from "azure-devops-extension-api/Build";
 import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
 import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
+import { DropdownFilterBarItem } from "azure-devops-ui/Dropdown";
 import { FilterBar } from "azure-devops-ui/FilterBar";
 import { Header, TitleSize } from "azure-devops-ui/Header";
 import { HeaderCommandBarWithFilter } from "azure-devops-ui/HeaderCommandBar";
 import { Page } from "azure-devops-ui/Page";
-import { Statuses } from "azure-devops-ui/Status";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
 import { Tab, TabBar } from "azure-devops-ui/Tabs";
 import { KeywordFilterBarItem } from "azure-devops-ui/TextFilterBarItem";
-import { Filter, IFilter, FILTER_CHANGE_EVENT } from "azure-devops-ui/Utilities/Filter";
+import { Filter, FILTER_CHANGE_EVENT, IFilter } from "azure-devops-ui/Utilities/Filter";
 import * as React from "react";
 import { AppState } from "./app.models";
 import * as styles from "./app.scss";
 import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
-import { Vote, BuildDisplayStatus } from "./PullRequestTable/PullRequestTable.models";
-import { getVoteStatus, getStatusFromBuild } from "./PullRequestTable/PullRequestTable.helpers";
+import { getStatusFromBuild, getVoteStatus } from "./PullRequestTable/PullRequestTable.helpers";
+import { DropdownMultiSelection } from "azure-devops-ui/Utilities/DropdownSelection";
+import { PullRequestTableItem } from "./PullRequestTable/PullRequestTable.models";
 
 enum TabType {
   active = "active",
@@ -33,6 +34,7 @@ export class App extends React.Component<{}, AppState> {
   private buildClient: BuildRestClient;
   private userContext: IUserContext;
   private filter: IFilter;
+  private repoFilterSelection = new DropdownMultiSelection();
   private searchFilter: {
     creatorId: undefined,
     includeLinks: undefined,
@@ -49,7 +51,7 @@ export class App extends React.Component<{}, AppState> {
     this.gitClient = API.getClient(GitRestClient);
     this.buildClient = API.getClient(BuildRestClient);
     this.filter = new Filter();
-    this.state = { filter: {}, pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined };
+    this.state = { filter: {}, repositories: [], pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined };
     this.filter.subscribe(() => this.setState({ filter: this.filter.getState() }), FILTER_CHANGE_EVENT);
   }
 
@@ -71,6 +73,17 @@ export class App extends React.Component<{}, AppState> {
           <div className="page-content-left page-content-right page-content-top">
             <FilterBar filter={this.filter}>
               <KeywordFilterBarItem filterItemKey="keyword" />
+              <DropdownFilterBarItem
+                filterItemKey="repo"
+                filter={this.filter}
+                items={this.state.repositories.map(repo => {
+                  return {
+                    id: repo.id,
+                    text: repo.name
+                  };
+                })}
+                selection={this.repoFilterSelection}
+                placeholder="Repositories" />
             </FilterBar>
           </div>
         </ConditionalChildren>
@@ -109,11 +122,13 @@ export class App extends React.Component<{}, AppState> {
           };
         });
       this.setState({
-        hostUrl: `https://dev.azure.com/${hostContext.name}/${project.name}`,
-        pullRequests: pullRequests,
+        hostUrl: `https://dev.azure.com/${encodeURIComponent(hostContext.name)}/${encodeURIComponent(project.name)}`,
+        pullRequests: pullRequests.sort(this.defaultSortPrs),
         activePrBadge: pullRequests.filter(x => !x.isDraft).length,
         draftPrBadge: pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id).length
       });
+      const repos = await this.gitClient.getRepositories(project.name);
+      this.setState({ repositories: repos });
     }
   }
 
@@ -140,5 +155,14 @@ export class App extends React.Component<{}, AppState> {
       </section>;
     }
     return <div></div>;
+  }
+
+  private defaultSortPrs(a: PullRequestTableItem, b: PullRequestTableItem) {
+    if (a.id > b.id) {
+        return 1;
+    } else if (a.id < b.id) {
+        return -1;
+    }
+    return 0;
   }
 }

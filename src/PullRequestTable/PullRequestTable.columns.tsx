@@ -11,18 +11,18 @@ import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import { getVoteStatus } from "./PullRequestTable.helpers";
 import * as styles from "./PullRequestTable.columns.scss";
 
-export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTableItem>[] {
-  function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
-    return {
-      getDisplayName() {
-        return identityRef.displayName;
-      },
-      getIdentityImageUrl(size: number) {
-        return identityRef._links["avatar"].href;
-      }
-    };
-  }
+function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
+  return {
+    getDisplayName() {
+      return identityRef.displayName;
+    },
+    getIdentityImageUrl(size: number) {
+      return identityRef._links["avatar"].href;
+    }
+  };
+}
 
+export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTableItem>[] {
   const renderAuthorColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
     return (
       <SimpleTableCell
@@ -42,6 +42,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
   };
 
   const renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    const repoUri = `${hostUri}/_git/${encodeURIComponent(tableItem.repo.name)}`;
     return (
       <TwoLineTableCell
         columnIndex={columnIndex}
@@ -50,13 +51,13 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         line1={
           <div className="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m flex-row scroll-hidden">
             <Tooltip overflowOnly={true}>
-              <Link href={`${hostUri}/_git/${tableItem.repo.name}/pullRequest/${tableItem.id}`}
+              <Link href={`${repoUri}/pullRequest/${encodeURIComponent(tableItem.id)}`}
                 className="text-ellipsis" subtle={true}>#{tableItem.id}: {tableItem.title}</Link>
             </Tooltip>
           </div>
         } line2={
           <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
-            <Link href={`${hostUri}/_git/${tableItem.repo.name}?version=GB${tableItem.baseBranch}`}
+            <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.baseBranch)}`}
               className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
@@ -64,7 +65,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
               </Tooltip>
             </Link>
             <Icon iconName="ChevronRightSmall" size={IconSize.small} />
-            <Link href={`${hostUri}/_git/${tableItem.repo.name}?version=GB${tableItem.targetBranch}`}
+            <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.targetBranch)}`}
               className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
@@ -92,12 +93,20 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
   };
 
   const renderBuildStatusColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    if (tableItem.buildDetails.build == null) {
+      return (
+        <SimpleTableCell
+          columnIndex={columnIndex}
+          tableColumn={tableColumn}
+          key={"col-" + columnIndex}>
+        </SimpleTableCell>
+      );
+    }
     return (
       <SimpleTableCell
         columnIndex={columnIndex}
         tableColumn={tableColumn}
-        key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        key={"col-" + columnIndex}>
         <Status {...tableItem.buildDetails.status.icon} size={StatusSize.m} className="icon-margin" />
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
@@ -136,9 +145,9 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
           tableItem.reviewers.map(reviewer =>
             <span className={`${styles.personaWithVote} icon-margin`}>
               <VssPersona identityDetailsProvider={summonPersona(reviewer)} size={"small"} />
-              { Math.abs(reviewer.vote) > 1 ? (
+              {Math.abs(reviewer.vote) > 1 ? (
                 <span className={styles.voteIcon}><Status {...getVoteStatus(reviewer.vote).status} size={StatusSize.s} /></span>
-              ) : "" }
+              ) : ""}
             </span>
           )
         }
@@ -155,7 +164,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderAuthorColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 56
+      minWidth: 56,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     },
     {
       columnLayout: TableColumnLayout.twoLine,
@@ -165,7 +178,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderDetailsColumn,
       onSize: onSize,
       width: new ObservableValue(-50),
-      minWidth: 150
+      minWidth: 150,
+      sortProps: {
+        ariaLabelAscending: "Sorted by ID low to high",
+        ariaLabelDescending: "Sorted by ID high to low"
+      }
     },
     {
       id: "repository",
@@ -174,7 +191,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderRepositoryColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 75
+      minWidth: 75,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     },
     {
       columnLayout: TableColumnLayout.singleLinePrefix,
@@ -203,7 +224,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       readonly: true,
       renderCell: renderReviewersColumn,
       width: new ObservableValue(-33),
-      minWidth: 150
+      minWidth: 150,
+      sortProps: {
+        ariaLabelAscending: "Sorted least to greatest",
+        ariaLabelDescending: "Sorted greatest to least"
+      }
     }
   ];
 
@@ -213,3 +238,26 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
 
   return columns;
 }
+
+export const sortFunctions = [
+  // Sort on Author column
+  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
+    return item1.author.displayName!.localeCompare(item2.author.displayName!);
+  },
+  // Sort on Details column
+  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
+    return item1.id - item2.id;
+  },
+  // Sort on Repository column
+  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
+    return item1.repo.name!.localeCompare(item2.repo.name!);
+  },
+  // Don't sort on Build Status column
+  null,
+  // Don't sort on My Vote column
+  null,
+  // Sort on Reviewers column
+  (item1: PullRequestTableItem, item2: PullRequestTableItem): number => {
+    return item1.reviewers.length - item2.reviewers.length;
+  },
+];

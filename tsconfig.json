@@ -11,6 +11,7 @@
     "outDir": "dist/",
     "jsx": "react",
     "lib": [
+      "es2017",
       "es5",
       "es6",
       "dom",
