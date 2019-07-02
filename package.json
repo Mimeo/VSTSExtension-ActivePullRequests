@@ -25,6 +25,7 @@
     "es6-shim": "^0.35.4",
     "rxjs": "^6.3.3",
     "sorttable": "^1.0.2",
+    "moment": "^2.24.0",
     "vss-web-extension-sdk": "^5.141.0"
   },
   "name": "vstsexthub",

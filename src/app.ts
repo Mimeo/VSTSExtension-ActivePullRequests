@@ -1,8 +1,9 @@
 import { VssPullRequests } from "./vss-pull-requests.service";
 declare var sorttable: any;
+declare var moment: any;
 
 const prClient = new VssPullRequests();
-prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prBuilds => {
+prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prbs => prClient.applyCommentStatus(prbs).then(prBuilds => {
     // Build the table
     const tableHeader = document.getElementById("pr-header");
     tableHeader.innerText += " (" + prBuilds.length + " pull request" + (prBuilds.length === 1 ? "" : "s") + ")";
@@ -20,6 +21,12 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         const tableCellUser = document.createElement("td");
         tableCellUser.innerText = prBuild.pr.createdBy.displayName;
         tableRow.appendChild(tableCellUser);
+        // Created cell
+        const tableCellCreated = document.createElement("td");
+        tableCellCreated.setAttribute("sorttable_customkey", "" + prBuild.pr.creationDate.toISOString());
+        const creationDateText = moment(prBuild.pr.creationDate).fromNow();
+        tableCellCreated.innerHTML = creationDateText;
+        tableRow.appendChild(tableCellCreated);
         // Pull Request ID cell
         const tableCellId = document.createElement("td");
         tableCellId.setAttribute("sorttable_customkey", "" + prBuild.pr.id);
@@ -41,6 +48,14 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
         const tableCellTargetBranch = document.createElement("td");
         tableCellTargetBranch.innerHTML = `<a href="${repoUrl}?version=GB${encodeURIComponent(prBuild.pr.targetBranch)}" target="_top"><span class="bowtie-icon bowtie-tfvc-branch"></span>${prBuild.pr.targetBranch}</a>`;
         tableRow.appendChild(tableCellTargetBranch);
+        // Comment cell
+        const tableCellComment = document.createElement("td");
+        tableCellComment.setAttribute("sorttable_customkey", "" + prBuild.pr.inactiveComments);
+        const commentStatus = prClient.commentStatusToDisplay(prBuild.pr.totalComments, prBuild.pr.inactiveComments);
+        tableCellComment.innerHTML = commentStatus.icon + " " + commentStatus.message;
+        tableCellComment.innerHTML = (commentStatus.icon != null ? `<span class="icon bowtie-icon bowtie-${commentStatus.icon}"></span> ` : "") + commentStatus.message;
+        tableCellComment.style.color = commentStatus.color != null ? commentStatus.color : "#999999";
+        tableRow.appendChild(tableCellComment);
         // Build Status cell
         const tableCellBuildStatus = document.createElement("td");
         const buildDisplay = prClient.buildStatusToBuildDisplay(prBuild.build);
@@ -81,4 +96,4 @@ prClient.getPullRequests().then(prs => prClient.applyLatestBuilds(prs)).then(prB
     specialMessageNode.parentNode.removeChild(specialMessageNode);
     document.getElementById("pr-body").classList.remove("loading");
     document.getElementById("pr-body").classList.add("loaded");
-});
+}));

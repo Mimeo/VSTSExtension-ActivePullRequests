@@ -5,15 +5,19 @@ import { Build } from "TFS/Build/Contracts";
 
 export interface PullRequest {
     createdBy: IdentityRef;
+    creationDate: Date;
     id: number;
     baseUri: string;
     projectName: string;
     title: string;
+    repoId: string;
     repo: string;
     vote: number;
     reviewers: IdentityRefWithVote[];
     baseBranch: string;
     targetBranch: string;
+    totalComments: number;
+    inactiveComments: number;
 }
 
 export interface PullRequestWithBuild {
@@ -30,6 +34,12 @@ export interface Vote {
 }
 
 export interface BuildDisplay {
+    icon?: string;
+    message: string;
+    color?: string;
+}
+
+export interface CommentDisplay {
     icon?: string;
     message: string;
     color?: string;
