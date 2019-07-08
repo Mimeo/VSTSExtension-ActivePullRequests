@@ -100,14 +100,16 @@ export class App extends React.Component<{}, AppState> {
     const project = await projectService.getProject();
     if (project) {
       const builds = await this.buildClient.getBuilds(project.name, null, null, null, null, null, null, BuildReason.PullRequest);
-      const pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
+      let pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
         .map(pr => {
           const selfWithVote = pr.reviewers.find(x => x.id === pr.createdBy.id);
           const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
           return {
             id: pr.pullRequestId,
+            repoId: pr.repository.id,
             isDraft: pr.isDraft,
             author: pr.createdBy,
+            creationDate: pr.creationDate,
             title: pr.title,
             repo: pr.repository,
             baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
@@ -118,9 +120,29 @@ export class App extends React.Component<{}, AppState> {
               status: getStatusFromBuild(latestBuild)
             },
             reviewers: pr.reviewers,
-            link: pr.url
+            link: pr.url,
+            totalComments: 0,
+            inactiveComments: 0
           };
         });
+      
+      pullRequests = await Promise.all(pullRequests.map(async pr => {
+        const threads = await this.gitClient.getThreads(pr.repoId, pr.id);
+        threads.forEach((thread) => {
+          if (!thread.isDeleted) {
+            const threadStatus = JSON.stringify(thread.status);
+            if (threadStatus) {
+              pr.totalComments++;
+              // thread status of 1 is 'active'
+              if (threadStatus !== "1") {
+                pr.inactiveComments++;
+              }
+            }
+          }
+        });
+        return pr;
+      }));
+
       this.setState({
         hostUrl: `https://dev.azure.com/${encodeURIComponent(hostContext.name)}/${encodeURIComponent(project.name)}`,
         pullRequests: pullRequests.sort(this.defaultSortPrs),

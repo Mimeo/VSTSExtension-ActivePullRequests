@@ -1,4 +1,4 @@
-import { Vote, BuildDisplayStatus } from "./PullRequestTable.models";
+import { Vote, BuildDisplayStatus, CommentDisplayStatus } from "./PullRequestTable.models";
 import { Statuses } from "azure-devops-ui/Status";
 import { Build, BuildStatus, BuildResult } from "azure-devops-extension-api/Build";
 
@@ -94,4 +94,18 @@ export function getStatusFromBuild(build: Build): BuildDisplayStatus {
     default:
       return { message: "" };
   }
+}
+
+export function getCommentStatus(totalComments: number, inactiveComments: number): CommentDisplayStatus {
+  let statusResult: CommentDisplayStatus = {
+    message: "",
+    icon: null
+  };
+
+  if (totalComments > 0) {
+    statusResult.message = `${inactiveComments}/${totalComments}`;
+    statusResult.icon = totalComments === inactiveComments ? Statuses.Success : Statuses.Failed;
+  }
+
+  return statusResult;
 }

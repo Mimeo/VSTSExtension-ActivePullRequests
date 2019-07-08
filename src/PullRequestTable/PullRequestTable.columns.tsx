@@ -1,6 +1,7 @@
 import { TableColumnLayout, ITableColumn, TwoLineTableCell, SimpleTableCell } from "azure-devops-ui/Table";
 import { PullRequestTableItem } from "./PullRequestTable.models";
 import * as React from "react";
+import * as moment from "moment";
 import { Tooltip } from "azure-devops-ui/TooltipEx";
 import { Link } from "azure-devops-ui/Link";
 import { Icon, IconSize } from "azure-devops-ui/Icon";
@@ -8,7 +9,7 @@ import { VssPersona, IIdentityDetailsProvider } from "azure-devops-ui/VssPersona
 import { Status, StatusSize } from "azure-devops-ui/Status";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
-import { getVoteStatus } from "./PullRequestTable.helpers";
+import { getVoteStatus, getCommentStatus } from "./PullRequestTable.helpers";
 import * as styles from "./PullRequestTable.columns.scss";
 
 function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
@@ -35,6 +36,22 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.author.displayName}</span>
+          </Tooltip>
+        </div>
+      </SimpleTableCell>
+    );
+  };
+
+  const renderCreationDateColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        <div className="flex-row scroll-hidden">
+          <Tooltip overflowOnly={true}>
+            <span className="text-ellipsis">{moment(tableItem.creationDate).fromNow()}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>
@@ -86,6 +103,31 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.repo.name}</span>
+          </Tooltip>
+        </div>
+      </SimpleTableCell>
+    );
+  };
+
+  const renderCommentStatusColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    if (tableItem.totalComments == 0) {
+      return (
+        <SimpleTableCell
+          columnIndex={columnIndex}
+          tableColumn={tableColumn}
+          key={"col-" + columnIndex}>
+        </SimpleTableCell>
+      );
+    }
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}>
+        <Status {...getCommentStatus(tableItem.totalComments, tableItem.inactiveComments).icon} size={StatusSize.m} className="icon-margin" />
+        <div className="flex-row scroll-hidden">
+          <Tooltip overflowOnly={true}>
+            <span className="text-ellipsis">{getCommentStatus(tableItem.totalComments, tableItem.inactiveComments).message}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>
@@ -167,6 +209,16 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       minWidth: 56
     },
     {
+      columnLayout: TableColumnLayout.singleLinePrefix,
+      id: "creationDate",
+      name: "Created",
+      readonly: true,
+      renderCell: renderCreationDateColumn,
+      onSize: onSize,
+      width: new ObservableValue(130),
+      minWidth: 130
+    },
+    {
       columnLayout: TableColumnLayout.twoLine,
       id: "details",
       name: "Details",
@@ -184,6 +236,16 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(-25),
       minWidth: 75
+    },
+    {
+      columnLayout: TableColumnLayout.singleLinePrefix,
+      id: "comment-status",
+      name: "Comments",
+      readonly: true,
+      renderCell: renderCommentStatusColumn,
+      onSize: onSize,
+      width: new ObservableValue(100),
+      minWidth: 100
     },
     {
       columnLayout: TableColumnLayout.singleLinePrefix,

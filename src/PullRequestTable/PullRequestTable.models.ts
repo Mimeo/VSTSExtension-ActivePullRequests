@@ -22,6 +22,7 @@ export interface PullRequestTableItem {
   id: number;
   isDraft: boolean;
   author: IdentityRef;
+  creationDate: Date;
   title: string;
   repo: GitRepository;
   baseBranch: string;
@@ -29,6 +30,8 @@ export interface PullRequestTableItem {
   buildDetails: BuildDetails;
   vote: Vote;
   reviewers: IdentityRefWithVote[];
+  totalComments: number,
+  inactiveComments: number
 }
 
 export interface Vote {
@@ -45,4 +48,9 @@ export interface BuildDisplayStatus {
 export interface BuildDetails {
   build?: Build;
   status: BuildDisplayStatus;
+}
+
+export interface CommentDisplayStatus {
+  icon?: IStatusProps;
+  message: string;
 }
