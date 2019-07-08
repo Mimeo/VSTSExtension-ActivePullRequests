@@ -54,12 +54,14 @@ export class VssPullRequests {
         return Promise.all(prs.map(prb => {
             return this.gitClient.getThreads(prb.pr.repoId, prb.pr.id).then(threads => {
                 threads.forEach((thread) => {
-                    const threadStatus = JSON.stringify(thread.status);
-                    if (threadStatus) {
-                        prb.pr.totalComments++;
-                        // thread status of 1 is 'active'
-                        if (threadStatus !== "1") {
-                            prb.pr.inactiveComments++;
+                    if (!thread.isDeleted) {
+                        const threadStatus = JSON.stringify(thread.status);
+                        if (threadStatus) {
+                            prb.pr.totalComments++;
+                            // thread status of 1 is 'active'
+                            if (threadStatus !== "1") {
+                                prb.pr.inactiveComments++;
+                            }
                         }
                     }
                 });
