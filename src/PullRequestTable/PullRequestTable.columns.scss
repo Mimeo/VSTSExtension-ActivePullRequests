@@ -1,0 +1,11 @@
+.personaWithVote {
+  position: relative;
+
+  .voteIcon {
+    position: absolute;
+    border-radius: 100%;
+    display: flex;
+    left: 60%;
+    top: 60%;
+  }
+}

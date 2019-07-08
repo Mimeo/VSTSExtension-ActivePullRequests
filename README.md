@@ -17,4 +17,3 @@ Check out the [contribution guidelines](CONTRIBUTING.md) if you want to contribu
 
 ### Credits
 Icon - pull request by Richard Slater from the Noun Project [Richard Slater](https://thenounproject.com/term/pull-request/116189/)
-
