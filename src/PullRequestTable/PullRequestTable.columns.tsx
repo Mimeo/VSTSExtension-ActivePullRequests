@@ -52,13 +52,13 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
           <div className="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m flex-row scroll-hidden">
             <Tooltip overflowOnly={true}>
               <Link href={`${repoUri}/pullRequest/${encodeURIComponent(tableItem.id)}`}
-                className="text-ellipsis" subtle={true}>#{tableItem.id}: {tableItem.title}</Link>
+                className="text-ellipsis" subtle={true} target="_top">#{tableItem.id}: {tableItem.title}</Link>
             </Tooltip>
           </div>
         } line2={
           <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
             <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.baseBranch)}`}
-              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
+              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true} target="_top">
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
                 <span className="text-ellipsis">{tableItem.baseBranch}</span>
@@ -66,7 +66,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
             </Link>
             <Icon iconName="ChevronRightSmall" size={IconSize.small} />
             <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.targetBranch)}`}
-              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true}>
+              className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true} target="_top">
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
                 <span className="text-ellipsis">{tableItem.targetBranch}</span>
