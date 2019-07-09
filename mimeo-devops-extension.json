@@ -63,11 +63,6 @@
     {
       "path": "static",
       "addressable": true
-    },
-    {
-      "path": "node_modules/moment/min",
-      "addressable": true,
-      "packagePath": "lib"
     }
   ],
   "categories": [
