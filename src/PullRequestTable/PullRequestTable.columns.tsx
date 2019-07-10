@@ -1,7 +1,8 @@
 import { TableColumnLayout, ITableColumn, TwoLineTableCell, SimpleTableCell } from "azure-devops-ui/Table";
 import { PullRequestTableItem } from "./PullRequestTable.models";
 import * as React from "react";
-import * as moment from "moment";
+import { Ago } from "azure-devops-ui/Ago";
+import { AgoFormat } from "azure-devops-ui/Utilities/Date";
 import { Tooltip } from "azure-devops-ui/TooltipEx";
 import { Link } from "azure-devops-ui/Link";
 import { Icon, IconSize } from "azure-devops-ui/Icon";
@@ -51,7 +52,7 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
         contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
-            <span className="text-ellipsis">{moment(tableItem.creationDate).fromNow()}</span>
+            <span className="text-ellipsis"><Ago date={tableItem.creationDate} format={AgoFormat.Compact} /></span>
           </Tooltip>
         </div>
       </SimpleTableCell>
