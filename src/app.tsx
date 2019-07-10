@@ -102,7 +102,7 @@ export class App extends React.Component<{}, AppState> {
       const builds = await this.buildClient.getBuilds(project.name, null, null, null, null, null, null, BuildReason.PullRequest);
       const pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
         .map(pr => {
-          const selfWithVote = pr.reviewers.find(x => x.id === pr.createdBy.id);
+          const currentUserReview = pr.reviewers.find(x => x.id === this.userContext.id);
           const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
           return {
             id: pr.pullRequestId,
@@ -112,7 +112,7 @@ export class App extends React.Component<{}, AppState> {
             repo: pr.repository,
             baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
             targetBranch: pr.targetRefName.replace("refs/heads/", ""),
-            vote: getVoteStatus(selfWithVote ? selfWithVote.vote : -1),
+            vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
             buildDetails: {
               build: latestBuild,
               status: getStatusFromBuild(latestBuild)
