@@ -12,6 +12,7 @@ import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import { getVoteStatus, getCommentStatus } from "./PullRequestTable.helpers";
 import * as styles from "./PullRequestTable.columns.scss";
+import { Settings } from "../SettingsPanel/SettingsPanel.models";
 
 function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   return {
@@ -24,7 +25,20 @@ function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   };
 }
 
-export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTableItem>[] {
+export function getColumnTemplate(hostUri: string, settings: Settings): ITableColumn<PullRequestTableItem>[] {
+  if(!settings) {
+    settings = {
+      AuthorColumnEnabled: true,
+      BuildStatusColumnEnabled: true,
+      CommentsColumnEnabled: true,
+      CreatedColumnEnabled: true,
+      DetailsColumnEnabled: true,
+      MyVoteColumnEnabled: true,
+      RepositoryColumnEnabled: true,
+      ReviewersColumnEnabled: true
+    }
+  }
+  
   const renderAuthorColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
     return (
       <SimpleTableCell
@@ -197,9 +211,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       </SimpleTableCell>
     );
   };
+  
+  let columns = [];
 
-  let columns = [
-    {
+  if(settings.AuthorColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "author",
       name: "Author",
@@ -208,8 +224,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(-25),
       minWidth: 56
-    },
-    {
+    });
+  }
+    
+  if(settings.CreatedColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "creationDate",
       name: "Created",
@@ -218,8 +237,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(130),
       minWidth: 130
-    },
-    {
+    });
+  }
+  
+  if(settings.DetailsColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.twoLine,
       id: "details",
       name: "Details",
@@ -228,8 +250,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(-50),
       minWidth: 150
-    },
-    {
+    });
+  }
+  
+  if(settings.RepositoryColumnEnabled) {
+    columns.push({
       id: "repository",
       name: "Repository",
       readonly: true,
@@ -237,8 +262,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(-25),
       minWidth: 75
-    },
-    {
+    });
+  }
+
+  if(settings.CommentsColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "comment-status",
       name: "Comments",
@@ -247,8 +275,11 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(100),
       minWidth: 100
-    },
-    {
+    });
+  }
+
+  if(settings.BuildStatusColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.singleLinePrefix,
       id: "build-status",
       name: "Build Status",
@@ -257,18 +288,24 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       onSize: onSize,
       width: new ObservableValue(-25),
       minWidth: 150
-    },
-    {
-      columnLayout: TableColumnLayout.singleLinePrefix,
-      id: "my-vote",
-      name: "My Vote",
-      readonly: true,
-      renderCell: renderMyVoteColumn,
-      onSize: onSize,
-      width: new ObservableValue(-25),
-      minWidth: 150
-    },
-    {
+    });
+  }
+
+  if(settings.MyVoteColumnEnabled) {
+    columns.push({
+        columnLayout: TableColumnLayout.singleLinePrefix,
+        id: "my-vote",
+        name: "My Vote",
+        readonly: true,
+        renderCell: renderMyVoteColumn,
+        onSize: onSize,
+        width: new ObservableValue(-25),
+        minWidth: 150
+    });
+  }
+
+  if(settings.ReviewersColumnEnabled) {
+    columns.push({
       columnLayout: TableColumnLayout.none,
       id: "reviewers",
       name: "Reviewers",
@@ -276,8 +313,8 @@ export function getColumnTemplate(hostUri: string): ITableColumn<PullRequestTabl
       renderCell: renderReviewersColumn,
       width: new ObservableValue(-33),
       minWidth: 150
-    }
-  ];
+    });
+  }
 
   function onSize(event: MouseEvent, index: number, width: number) {
     (columns[index].width as ObservableValue<number>).value = width;

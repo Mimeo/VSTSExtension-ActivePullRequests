@@ -20,7 +20,8 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
   constructor(props: PullRequestTableProps) {
     super(props);
     this.state = {
-      columns: getColumns(this.props.hostUrl),
+      columns: getColumns(this.props.hostUrl, this.props.settings),
+      settings: this.props.settings,
       filteredPrs: [],
       pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(
         this.filterItems(this.props.pullRequests) || new Array(5).fill(new ObservableValue<PullRequestTableItem>(undefined))
@@ -30,7 +31,7 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
 
   componentDidUpdate(prevProps: PullRequestTableProps, prevState: PullRequestTableState) {
     if (prevProps.hostUrl == null && this.props.hostUrl != null) {
-      this.setState({ columns: getColumns(this.props.hostUrl) });
+      this.setState({ columns: getColumns(this.props.hostUrl, this.props.settings) });
     }
     if (!areArraysEqual(prevProps.pullRequests, this.props.pullRequests) || prevProps.filter !== this.props.filter) {
       this.setState({
