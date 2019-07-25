@@ -5,17 +5,20 @@ import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observabl
 import { IStatusProps } from "azure-devops-ui/Status";
 import { Build } from "azure-devops-extension-api/Build";
 import { ITableColumn } from "azure-devops-ui/Table";
+import { Settings } from "../SettingsPanel/SettingsPanel.models";
 
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
   hostUrl: string;
   filter: IFilterState;
+  settings: Settings
 }
 
 export interface PullRequestTableState {
   columns: ITableColumn<PullRequestTableItem>[];
   filteredPrs: PullRequestTableItem[];
   pullRequestProvider: ObservableArray<ObservableValue<PullRequestTableItem>>;
+  settings: Settings
 }
 
 export interface PullRequestTableItem {

@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "name": "All Active Pull Requests",
   "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile"],
   "description": "View all active pull requests across all repos in a project.",
