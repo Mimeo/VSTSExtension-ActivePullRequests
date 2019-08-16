@@ -45,7 +45,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
         <VssPersona identityDetailsProvider={summonPersona(tableItem.author)}
           className="icon-large-margin" size={"medium"} />
         <div className="flex-row scroll-hidden">
@@ -63,7 +63,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis"><Ago date={tableItem.creationDate} format={AgoFormat.Compact} /></span>
@@ -77,6 +77,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
     const repoUri = `${hostUri}/_git/${encodeURIComponent(tableItem.repo.name)}`;
     return (
       <TwoLineTableCell
+        className={styles.pullRequestColumn}
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
@@ -114,7 +115,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.repo.name}</span>
@@ -128,6 +129,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
     if (tableItem.totalComments == 0) {
       return (
         <SimpleTableCell
+          contentClassName={styles.pullRequestColumn}
           columnIndex={columnIndex}
           tableColumn={tableColumn}
           key={"col-" + columnIndex}>
@@ -136,6 +138,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
     }
     return (
       <SimpleTableCell
+        contentClassName={styles.pullRequestColumn}
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}>
@@ -153,6 +156,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
     if (tableItem.buildDetails.build == null) {
       return (
         <SimpleTableCell
+          contentClassName={styles.pullRequestColumn}
           columnIndex={columnIndex}
           tableColumn={tableColumn}
           key={"col-" + columnIndex}>
@@ -161,6 +165,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
     }
     return (
       <SimpleTableCell
+        contentClassName={styles.pullRequestColumn}
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}>
@@ -180,7 +185,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
         <Status {...tableItem.vote.status} size={StatusSize.m} className="icon-margin" />
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
@@ -197,7 +202,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
-        contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
         {
           tableItem.reviewers.map(reviewer =>
             <span className={`${styles.personaWithVote} icon-margin`}>
@@ -223,7 +228,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderAuthorColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 56
+      minWidth: 56,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     });
   }
     
@@ -236,7 +245,12 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderCreationDateColumn,
       onSize: onSize,
       width: new ObservableValue(130),
-      minWidth: 130
+      minWidth: 130,
+      sortProps: {
+        sortOrder: 0,
+        ariaLabelAscending: "Sorted Oldest to Newest",
+        ariaLabelDescending: "Sorted Newest to Oldest"
+      }
     });
   }
   
@@ -249,7 +263,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderDetailsColumn,
       onSize: onSize,
       width: new ObservableValue(-50),
-      minWidth: 150
+      minWidth: 150,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     });
   }
   
@@ -261,7 +279,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderRepositoryColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 75
+      minWidth: 75,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     });
   }
 
@@ -274,7 +296,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderCommentStatusColumn,
       onSize: onSize,
       width: new ObservableValue(100),
-      minWidth: 100
+      minWidth: 100,
+      sortProps: {
+        ariaLabelAscending: "Sorted Least to Most Resolved",
+        ariaLabelDescending: "Sorted Most to Least Resolved"
+      }
     });
   }
 
@@ -287,7 +313,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
       renderCell: renderBuildStatusColumn,
       onSize: onSize,
       width: new ObservableValue(-25),
-      minWidth: 150
+      minWidth: 150,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     });
   }
 
@@ -300,7 +330,11 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         renderCell: renderMyVoteColumn,
         onSize: onSize,
         width: new ObservableValue(-25),
-        minWidth: 150
+        minWidth: 150,
+        sortProps: {
+          ariaLabelAscending: "Sorted A to Z",
+          ariaLabelDescending: "Sorted Z to A"
+        }
     });
   }
 
