@@ -153,7 +153,7 @@ export class App extends React.Component<{}, AppState> {
             if (threadStatus) {
               pr.totalComments++;
               // thread status of 1 is 'active'
-              if (threadStatus !== "1") {
+              if (threadStatus !== "1" && threadStatus !== "6") {
                 pr.inactiveComments++;
               }
             }
