@@ -1,7 +1,7 @@
 import * as API from "azure-devops-extension-api";
-import { CommonServiceIds, IProjectPageService, IExtensionDataManager, IExtensionDataService } from "azure-devops-extension-api";
+import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, ILocationService, IProjectPageService } from "azure-devops-extension-api";
 import { BuildReason, BuildRestClient } from "azure-devops-extension-api/Build";
-import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
+import { CommentThreadStatus, GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
 import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
@@ -14,13 +14,14 @@ import { Page } from "azure-devops-ui/Page";
 import { Surface, SurfaceBackground } from "azure-devops-ui/Surface";
 import { Tab, TabBar } from "azure-devops-ui/Tabs";
 import { KeywordFilterBarItem } from "azure-devops-ui/TextFilterBarItem";
+import { DropdownMultiSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Filter, FILTER_CHANGE_EVENT, IFilter } from "azure-devops-ui/Utilities/Filter";
 import * as React from "react";
 import { AppState } from "./app.models";
 import * as styles from "./app.scss";
+import { getOrganizationUrl } from "./azdo-services";
 import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
 import { getStatusFromBuild, getVoteStatus } from "./PullRequestTable/PullRequestTable.helpers";
-import { DropdownMultiSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { PullRequestTableItem } from "./PullRequestTable/PullRequestTable.models";
 import SettingsPanel from "./SettingsPanel/SettingsPanel";
 import { Settings } from "./SettingsPanel/SettingsPanel.models";
@@ -38,6 +39,7 @@ export class App extends React.Component<{}, AppState> {
   private gitClient: GitRestClient;
   private buildClient: BuildRestClient;
   private userContext: IUserContext;
+  private locationService: ILocationService;
   private filter: IFilter;
   private repoFilterSelection = new DropdownMultiSelection();
   private searchFilter: {
@@ -56,7 +58,17 @@ export class App extends React.Component<{}, AppState> {
     this.gitClient = API.getClient(GitRestClient);
     this.buildClient = API.getClient(BuildRestClient);
     this.filter = new Filter();
-    this.state = { showSettings: false, filter: {}, repositories: [], pullRequests: undefined, hostUrl: undefined, selectedTabId: TabType.active, activePrBadge: undefined, draftPrBadge: undefined, settings: undefined };
+    this.state = {
+      hostUrl: undefined,
+      showSettings: false,
+      filter: {},
+      repositories: [],
+      pullRequests: undefined,
+      selectedTabId: TabType.active,
+      activePrBadge: undefined,
+      draftPrBadge: undefined,
+      settings: undefined
+    };
     this.filter.subscribe(() => this.setState({ filter: this.filter.getState() }), FILTER_CHANGE_EVENT);
   }
 
@@ -65,7 +77,7 @@ export class App extends React.Component<{}, AppState> {
   }
 
   closeSettings = () => {
-    this.setState({ showSettings: false});
+    this.setState({ showSettings: false });
   }
 
   render() {
@@ -74,7 +86,7 @@ export class App extends React.Component<{}, AppState> {
         <Header title="All Repositories"
           titleSize={TitleSize.Large}
           commandBarItems={[]} />
-          
+
         <TabBar selectedTabId={this.state.selectedTabId} onSelectedTabChanged={this.onSelectedTabChanged} renderAdditionalContent={this.renderTabBarCommands}>
           <Tab id={TabType.active} name="Active Pull Requests" badgeCount={this.state.activePrBadge} />
           <Tab id={TabType.drafts} name="My Drafts" badgeCount={this.state.draftPrBadge} />
@@ -107,16 +119,20 @@ export class App extends React.Component<{}, AppState> {
 
   private async initialize() {
     await SDK.ready();
+    const extensionContext = SDK.getExtensionContext();
+    console.log(`You're using version ${extensionContext.version} of All Active Pull Requests.`);
+
     const hostContext = SDK.getHost();
     this.userContext = SDK.getUser();
+    const accessToken = await SDK.getAccessToken();
     const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
+    const extDataService = await SDK.getService<IExtensionDataService>(CommonServiceIds.ExtensionDataService);
+
     const project = await projectService.getProject();
     this.projectName = project.name;
-    const accessToken = await SDK.getAccessToken();
-    const extDataService = await SDK.getService<IExtensionDataService>(CommonServiceIds.ExtensionDataService);
     this.dataManager = await extDataService.getExtensionDataManager(SDK.getExtensionContext().id, accessToken);
     const settings = await this.getCurrentSettings(this.projectName);
-    
+
     if (project) {
       const builds = await this.buildClient.getBuilds(project.name, null, null, null, null, null, null, BuildReason.PullRequest);
       let pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
@@ -144,18 +160,14 @@ export class App extends React.Component<{}, AppState> {
             inactiveComments: 0
           };
         });
-      
+
       pullRequests = await Promise.all(pullRequests.map(async pr => {
         const threads = await this.gitClient.getThreads(pr.repoId, pr.id);
         threads.forEach((thread) => {
-          if (!thread.isDeleted) {
-            const threadStatus = JSON.stringify(thread.status);
-            if (threadStatus) {
-              pr.totalComments++;
-              // thread status of 1 is 'active'
-              if (threadStatus !== "1" && threadStatus !== "6") {
-                pr.inactiveComments++;
-              }
+          if (!thread.isDeleted && thread.status) {
+            pr.totalComments++;
+            if (thread.status !== CommentThreadStatus.Active && thread.status !== CommentThreadStatus.Pending) {
+              pr.inactiveComments++;
             }
           }
         });
@@ -163,7 +175,7 @@ export class App extends React.Component<{}, AppState> {
       }));
 
       this.setState({
-        hostUrl: `https://dev.azure.com/${encodeURIComponent(hostContext.name)}/${encodeURIComponent(project.name)}`,
+        hostUrl: await getOrganizationUrl(hostContext.name),
         pullRequests: pullRequests.sort(this.defaultSortPrs),
         activePrBadge: pullRequests.filter(x => !x.isDraft).length,
         draftPrBadge: pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id).length,
@@ -178,10 +190,10 @@ export class App extends React.Component<{}, AppState> {
 
   private async getCurrentSettings(projectName: string): Promise<Settings> {
     var settingsResult = await this.dataManager.getValue<string>(`${projectName}-extension-settings`, { scopeType: "User" });
-    if(settingsResult && settingsResult !== "") {
+    if (settingsResult && settingsResult !== "") {
       return JSON.parse(settingsResult);
     }
-    
+
     // Default settings
     return {
       AuthorColumnEnabled: true,
@@ -196,13 +208,13 @@ export class App extends React.Component<{}, AppState> {
   }
 
   private renderTabBarCommands = () => {
-    return <HeaderCommandBarWithFilter  filter={this.filter} filterToggled={this.showFilter} items={[
+    return <HeaderCommandBarWithFilter filter={this.filter} filterToggled={this.showFilter} items={[
       {
         subtle: true,
         id: "settings",
         onActivate: () => {
-          if(this.isReady) {
-            this.setState({ showSettings: true});
+          if (this.isReady) {
+            this.setState({ showSettings: true });
           }
         },
         tooltipProps: { text: "Extension Settings" },
@@ -210,12 +222,12 @@ export class App extends React.Component<{}, AppState> {
         iconProps: {
           iconName: "Settings"
         }
-    },
+      },
     ]} />;
   }
 
   private onSelectedTabChanged = (newTabId: string) => {
-    if(this.isReady) {
+    if (this.isReady) {
       this.setState({ selectedTabId: newTabId });
     }
   }
@@ -239,9 +251,9 @@ export class App extends React.Component<{}, AppState> {
 
   private defaultSortPrs(a: PullRequestTableItem, b: PullRequestTableItem) {
     if (a.id > b.id) {
-        return 1;
+      return 1;
     } else if (a.id < b.id) {
-        return -1;
+      return -1;
     }
     return 0;
   }

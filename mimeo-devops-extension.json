@@ -16,7 +16,7 @@
     }
   ],
   "demands": [
-    "api-version/3.0"
+    "api-version/5.0"
   ],
   "tags": [
       "pullrequest",

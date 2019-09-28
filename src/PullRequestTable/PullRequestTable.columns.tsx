@@ -74,7 +74,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
   };
 
   const renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
-    const repoUri = `${hostUri}/_git/${encodeURIComponent(tableItem.repo.name)}`;
+    const repoUri = `${hostUri}_git/${encodeURIComponent(tableItem.repo.name)}`;
     return (
       <TwoLineTableCell
         className={styles.pullRequestColumn}

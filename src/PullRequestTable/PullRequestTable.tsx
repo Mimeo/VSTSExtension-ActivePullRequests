@@ -1,12 +1,11 @@
 import { Card } from "azure-devops-ui/Card";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
-import { Table, ColumnSorting, sortItems, SortOrder } from "azure-devops-ui/Table";
+import { ColumnSorting, sortItems, SortOrder, Table } from "azure-devops-ui/Table";
 import { ZeroData, ZeroDataActionType } from "azure-devops-ui/ZeroData";
 import * as React from "react";
 import * as zeroImage from "./../../static/images/pullRequest.png";
 import { getColumnTemplate as getColumns } from "./PullRequestTable.columns";
 import { PullRequestTableItem, PullRequestTableProps, PullRequestTableState } from "./PullRequestTable.models";
-import { Settings } from "../SettingsPanel/SettingsPanel.models";
 
 function areArraysEqual(arr1: any[], arr2: any[]): boolean {
   if (arr1 == null || arr2 == null) { return false; }
@@ -126,9 +125,7 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
         imagePath={zeroImage}
         actionText="Refresh"
         actionType={ZeroDataActionType.ctaButton}
-        onActionClick={(event, item) =>
-          window.location.reload()
-        } />;
+        onActionClick={_ => window.location.reload()} />;
     }
     return (
       <Card className="flex-grow bolt-table-card" contentProps={{ contentPadding: false }}>
