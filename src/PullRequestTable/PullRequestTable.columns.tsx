@@ -13,6 +13,7 @@ import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import { getVoteStatus, getCommentStatus } from "./PullRequestTable.helpers";
 import * as styles from "./PullRequestTable.columns.scss";
 import { Settings } from "../SettingsPanel/SettingsPanel.models";
+import { CommentThreadStatus } from "azure-devops-extension-api/Git";
 
 function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   return {
@@ -74,7 +75,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
   };
 
   const renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
-    const repoUri = `${hostUri}_git/${encodeURIComponent(tableItem.repo.name)}`;
+    const repoUri = `${hostUri}/_git/${encodeURIComponent(tableItem.repo.name)}`;
     return (
       <TwoLineTableCell
         className={styles.pullRequestColumn}
@@ -126,7 +127,9 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
   };
 
   const renderCommentStatusColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
-    if (tableItem.totalComments == 0) {
+    const totalComments = tableItem.comments.length;
+    const inactiveComments = tableItem.comments.filter(thread => ![CommentThreadStatus.Active, CommentThreadStatus.Pending].includes(thread.status)).length;
+    if (totalComments == 0) {
       return (
         <SimpleTableCell
           contentClassName={styles.pullRequestColumn}
@@ -142,10 +145,10 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
         columnIndex={columnIndex}
         tableColumn={tableColumn}
         key={"col-" + columnIndex}>
-        <Status {...getCommentStatus(tableItem.totalComments, tableItem.inactiveComments).icon} size={StatusSize.m} className="icon-margin" />
+        <Status {...getCommentStatus(totalComments, inactiveComments).icon} size={StatusSize.m} className="icon-margin" />
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
-            <span className="text-ellipsis">{getCommentStatus(tableItem.totalComments, tableItem.inactiveComments).message}</span>
+            <span className="text-ellipsis">{getCommentStatus(totalComments, inactiveComments).message}</span>
           </Tooltip>
         </div>
       </SimpleTableCell>

@@ -1,7 +1,7 @@
 import * as API from "azure-devops-extension-api";
-import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, ILocationService, IProjectPageService } from "azure-devops-extension-api";
+import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, IProjectPageService } from "azure-devops-extension-api";
 import { BuildReason, BuildRestClient } from "azure-devops-extension-api/Build";
-import { CommentThreadStatus, GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
+import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
 import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
@@ -19,7 +19,6 @@ import { Filter, FILTER_CHANGE_EVENT, IFilter } from "azure-devops-ui/Utilities/
 import * as React from "react";
 import { AppState } from "./app.models";
 import * as styles from "./app.scss";
-import { getOrganizationUrl } from "./azdo-services";
 import { PullRequestTable } from "./PullRequestTable/PullRequestTable";
 import { getStatusFromBuild, getVoteStatus } from "./PullRequestTable/PullRequestTable.helpers";
 import { PullRequestTableItem } from "./PullRequestTable/PullRequestTable.models";
@@ -39,7 +38,6 @@ export class App extends React.Component<{}, AppState> {
   private gitClient: GitRestClient;
   private buildClient: BuildRestClient;
   private userContext: IUserContext;
-  private locationService: ILocationService;
   private filter: IFilter;
   private repoFilterSelection = new DropdownMultiSelection();
   private searchFilter: {
@@ -128,64 +126,56 @@ export class App extends React.Component<{}, AppState> {
     const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
     const extDataService = await SDK.getService<IExtensionDataService>(CommonServiceIds.ExtensionDataService);
 
-    const project = await projectService.getProject();
-    this.projectName = project.name;
+    this.projectName = (await projectService.getProject()).name;
     this.dataManager = await extDataService.getExtensionDataManager(SDK.getExtensionContext().id, accessToken);
     const settings = await this.getCurrentSettings(this.projectName);
+    const repos = (await this.gitClient.getRepositories(this.projectName)).sort((a, b) => a.name.localeCompare(b.name));
 
-    if (project) {
-      const builds = await this.buildClient.getBuilds(project.name, null, null, null, null, null, null, BuildReason.PullRequest);
-      let pullRequests = (await this.gitClient.getPullRequestsByProject(project.name, this.searchFilter))
-        .map(pr => {
-          const currentUserReview = pr.reviewers.find(x => x.id === this.userContext.id);
-          const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
-          return {
-            id: pr.pullRequestId,
-            repoId: pr.repository.id,
-            isDraft: pr.isDraft,
-            author: pr.createdBy,
-            creationDate: pr.creationDate,
-            title: pr.title,
-            repo: pr.repository,
-            baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
-            targetBranch: pr.targetRefName.replace("refs/heads/", ""),
-            vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
-            buildDetails: {
-              build: latestBuild,
-              status: getStatusFromBuild(latestBuild)
-            },
-            reviewers: pr.reviewers,
-            link: pr.url,
-            totalComments: 0,
-            inactiveComments: 0
-          };
-        });
-
-      pullRequests = await Promise.all(pullRequests.map(async pr => {
-        const threads = await this.gitClient.getThreads(pr.repoId, pr.id);
-        threads.forEach((thread) => {
-          if (!thread.isDeleted && thread.status) {
-            pr.totalComments++;
-            if (thread.status !== CommentThreadStatus.Active && thread.status !== CommentThreadStatus.Pending) {
-              pr.inactiveComments++;
-            }
-          }
-        });
-        return pr;
-      }));
-
-      this.setState({
-        hostUrl: await getOrganizationUrl(hostContext.name),
-        pullRequests: pullRequests.sort(this.defaultSortPrs),
-        activePrBadge: pullRequests.filter(x => !x.isDraft).length,
-        draftPrBadge: pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id).length,
-        settings: settings
-      });
-      const repos = await this.gitClient.getRepositories(project.name);
-      this.setState({ repositories: repos });
+    const gitPullRequests = await this.gitClient.getPullRequestsByProject(this.projectName, this.searchFilter);
+    const pullRequests: PullRequestTableItem[] = [];
+    if (gitPullRequests.length > 0) {
+      const builds = await this.buildClient.getBuilds(this.projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
+      pullRequests.push(...await Promise.all(gitPullRequests.map(async pr => {
+        const currentUserReview = pr.reviewers.find(reviewer => reviewer.id === this.userContext.id);
+        const latestBuild = builds.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.pullRequestId.toString());
+        const comments = (await this.gitClient.getThreads(pr.repository.id, pr.pullRequestId)).filter(thread => !thread.isDeleted && thread.status);
+        return {
+          id: pr.pullRequestId,
+          repoId: pr.repository.id,
+          isDraft: pr.isDraft,
+          author: pr.createdBy,
+          creationDate: pr.creationDate,
+          title: pr.title,
+          repo: pr.repository,
+          baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
+          targetBranch: pr.targetRefName.replace("refs/heads/", ""),
+          vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
+          buildDetails: {
+            build: latestBuild,
+            status: getStatusFromBuild(latestBuild)
+          },
+          reviewers: pr.reviewers,
+          link: pr.url,
+          comments: comments
+        };
+      })));
     }
 
+    const parentUrl = new URL(document.referrer);
+    let hostUrl = `${parentUrl.origin}/${parentUrl.pathname.split('/')[0]}`;
+    if (!hostUrl.includes(hostContext.name)) {
+      hostUrl += hostContext.name;
+    }
+    this.setState({
+      hostUrl: hostUrl + (hostUrl.endsWith('/') ? '' : '/') + this.projectName,
+      settings: settings,
+      repositories: repos,
+      pullRequests: pullRequests.sort(this.defaultSortPrs),
+      activePrBadge: pullRequests.filter(pr => !pr.isDraft).length,
+      draftPrBadge: pullRequests.filter(pr => pr.isDraft && pr.author.id === this.userContext.id).length
+    });
     this.isReady = true;
+    await SDK.notifyLoadSucceeded();
   }
 
   private async getCurrentSettings(projectName: string): Promise<Settings> {
