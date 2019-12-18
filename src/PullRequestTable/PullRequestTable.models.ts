@@ -1,4 +1,4 @@
-import { GitRepository, IdentityRefWithVote } from "azure-devops-extension-api/Git";
+import { GitRepository, IdentityRefWithVote, CommentThread } from "azure-devops-extension-api/Git";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { IFilterState } from "azure-devops-ui/Utilities/Filter";
 import { ObservableArray, ObservableValue } from "azure-devops-ui/Core/Observable";
@@ -31,13 +31,12 @@ export interface PullRequestTableItem {
   baseBranch: string;
   targetBranch: string;
   buildDetails: BuildDetails;
-  vote: Vote;
+  vote: VoteDisplayStatus;
   reviewers: IdentityRefWithVote[];
-  totalComments: number,
-  inactiveComments: number
+  comments: CommentThread[];
 }
 
-export interface Vote {
+export interface VoteDisplayStatus {
   status: IStatusProps;
   message: string;
   order: number;

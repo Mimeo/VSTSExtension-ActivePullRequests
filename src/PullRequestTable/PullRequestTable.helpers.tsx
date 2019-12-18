@@ -1,8 +1,8 @@
-import { Vote, BuildDisplayStatus, CommentDisplayStatus } from "./PullRequestTable.models";
+import { VoteDisplayStatus, BuildDisplayStatus, CommentDisplayStatus } from "./PullRequestTable.models";
 import { Statuses } from "azure-devops-ui/Status";
 import { Build, BuildStatus, BuildResult } from "azure-devops-extension-api/Build";
 
-export function getVoteStatus(vote: number): Vote {
+export function getVoteStatus(vote: number): VoteDisplayStatus {
   switch (vote) {
     case -10:
       return {

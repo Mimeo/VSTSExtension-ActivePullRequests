@@ -12,5 +12,5 @@ export interface AppState {
   draftPrBadge: number;
   filter: IFilterState;
   showSettings: boolean;
-  settings: Settings
+  settings: Settings;
 }
