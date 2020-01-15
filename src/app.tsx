@@ -163,7 +163,7 @@ export class App extends React.Component<{}, AppState> {
 
     const parentUrl = new URL(document.referrer);
     let hostUrl = `${parentUrl.origin}/${parentUrl.pathname.split('/')[0]}`;
-    if (!hostUrl.includes(hostContext.name)) {
+    if (!hostUrl.toLocaleLowerCase().includes(hostContext.name.toLocaleLowerCase())) {
       hostUrl += hostContext.name;
     }
     this.setState({
