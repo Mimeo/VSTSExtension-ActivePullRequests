@@ -1,6 +1,6 @@
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, IProjectPageService } from "azure-devops-extension-api";
-import { BuildReason, BuildRestClient } from "azure-devops-extension-api/Build";
+import { BuildReason, BuildRestClient, Build } from "azure-devops-extension-api/Build";
 import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
@@ -150,17 +150,17 @@ export class App extends React.Component<{}, AppState> {
   }
 
   private async getAllPullRequests(projectName: string): Promise<PullRequestTableItem[]> {
-    const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName);
+    const builds = await this.buildClient.getBuilds(projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
+    const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName, builds);
     while (pullRequests.length % 99 === 0) {
-      pullRequests.push(...await this.getPullRequests(projectName, pullRequests.length));
+      pullRequests.push(...await this.getPullRequests(projectName, builds, pullRequests.length));
     }
     return pullRequests;
   }
 
-  private async getPullRequests(projectName: string, skip = 0): Promise<PullRequestTableItem[]> {
+  private async getPullRequests(projectName: string, builds: Build[], skip = 0): Promise<PullRequestTableItem[]> {
     const prs = await this.gitClient.getPullRequestsByProject(projectName, this.searchFilter, null, skip, 99);
     if (prs.length === 0) return [];
-    const builds = await this.buildClient.getBuilds(projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
     return [
       ...await Promise.all(prs.map(async pr => {
         const currentUserReview = pr.reviewers.find(x => x.id === this.userContext.id);
