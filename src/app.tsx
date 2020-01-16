@@ -1,6 +1,6 @@
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, IProjectPageService } from "azure-devops-extension-api";
-import { BuildReason, BuildRestClient } from "azure-devops-extension-api/Build";
+import { BuildReason, BuildRestClient, Build } from "azure-devops-extension-api/Build";
 import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
@@ -130,36 +130,7 @@ export class App extends React.Component<{}, AppState> {
     this.dataManager = await extDataService.getExtensionDataManager(SDK.getExtensionContext().id, accessToken);
     const settings = await this.getCurrentSettings(this.projectName);
     const repos = (await this.gitClient.getRepositories(this.projectName)).sort((a, b) => a.name.localeCompare(b.name));
-
-    const gitPullRequests = await this.gitClient.getPullRequestsByProject(this.projectName, this.searchFilter);
-    const pullRequests: PullRequestTableItem[] = [];
-    if (gitPullRequests.length > 0) {
-      const builds = await this.buildClient.getBuilds(this.projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
-      pullRequests.push(...await Promise.all(gitPullRequests.map(async pr => {
-        const currentUserReview = pr.reviewers.find(reviewer => reviewer.id === this.userContext.id);
-        const latestBuild = builds.find(build => build.triggerInfo["pr.number"] != null && build.triggerInfo["pr.number"] === pr.pullRequestId.toString());
-        const comments = (await this.gitClient.getThreads(pr.repository.id, pr.pullRequestId)).filter(thread => !thread.isDeleted && thread.status);
-        return {
-          id: pr.pullRequestId,
-          repoId: pr.repository.id,
-          isDraft: pr.isDraft,
-          author: pr.createdBy,
-          creationDate: pr.creationDate,
-          title: pr.title,
-          repo: pr.repository,
-          baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
-          targetBranch: pr.targetRefName.replace("refs/heads/", ""),
-          vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
-          buildDetails: {
-            build: latestBuild,
-            status: getStatusFromBuild(latestBuild)
-          },
-          reviewers: pr.reviewers,
-          link: pr.url,
-          comments: comments
-        };
-      })));
-    }
+    const pullRequests = await this.getAllPullRequests(this.projectName);
 
     const parentUrl = new URL(document.referrer);
     let hostUrl = `${parentUrl.origin}/${parentUrl.pathname.split('/')[0]}`;
@@ -176,6 +147,45 @@ export class App extends React.Component<{}, AppState> {
     });
     this.isReady = true;
     await SDK.notifyLoadSucceeded();
+  }
+
+  private async getAllPullRequests(projectName: string): Promise<PullRequestTableItem[]> {
+    const builds = await this.buildClient.getBuilds(projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
+    const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName, builds);
+    while (pullRequests.length % 99 === 0) {
+      pullRequests.push(...await this.getPullRequests(projectName, builds, pullRequests.length));
+    }
+    return pullRequests;
+  }
+
+  private async getPullRequests(projectName: string, builds: Build[], skip = 0): Promise<PullRequestTableItem[]> {
+    const prs = await this.gitClient.getPullRequestsByProject(projectName, this.searchFilter, null, skip, 99);
+    if (prs.length === 0) return [];
+    return [
+      ...await Promise.all(prs.map(async pr => {
+        const currentUserReview = pr.reviewers.find(x => x.id === this.userContext.id);
+        const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
+        const comments = (await this.gitClient.getThreads(pr.repository.id, pr.pullRequestId)).filter(thread => !thread.isDeleted && thread.status);
+        return {
+          id: pr.pullRequestId,
+          isDraft: pr.isDraft,
+          author: pr.createdBy,
+          creationDate: pr.creationDate,
+          title: pr.title,
+          repo: pr.repository,
+          baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
+          targetBranch: pr.targetRefName.replace("refs/heads/", ""),
+          vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
+          buildDetails: {
+            build: latestBuild,
+            status: getStatusFromBuild(latestBuild)
+          },
+          reviewers: pr.reviewers,
+          link: pr.url,
+          comments: comments
+        };
+      }))
+    ];
   }
 
   private async getCurrentSettings(projectName: string): Promise<Settings> {
