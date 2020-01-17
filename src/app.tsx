@@ -133,8 +133,11 @@ export class App extends React.Component<{}, AppState> {
     const pullRequests = await this.getAllPullRequests(this.projectName);
 
     const parentUrl = new URL(document.referrer);
-    let hostUrl = `${parentUrl.origin}/${parentUrl.pathname.split('/')[0]}`;
-    if (!hostUrl.toLocaleLowerCase().includes(hostContext.name.toLocaleLowerCase())) {
+    const baseUrl = new URL(parentUrl.pathname.split(new RegExp(encodeURIComponent(this.projectName), 'i'))[0], parentUrl);
+    let hostUrl = baseUrl.toString();
+    if (!hostUrl.toLocaleLowerCase().endsWith(hostContext.name.toLocaleLowerCase() + '/') &&
+      !baseUrl.origin.toLocaleLowerCase().includes(hostContext.name.toLocaleLowerCase())) {
+      // if we get here, that must mean projectName === hostContext.name and we aren't on a visualstudio.com domain
       hostUrl += hostContext.name;
     }
     this.setState({
