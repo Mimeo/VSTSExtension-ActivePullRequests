@@ -155,8 +155,10 @@ export class App extends React.Component<{}, AppState> {
   private async getAllPullRequests(projectName: string): Promise<PullRequestTableItem[]> {
     const builds = await this.buildClient.getBuilds(projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
     const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName, builds);
-    while (pullRequests.length % 99 === 0) {
-      pullRequests.push(...await this.getPullRequests(projectName, builds, pullRequests.length));
+    while (pullRequests.length > 0 && pullRequests.length % 99 === 0) {
+      const morePRs = await this.getPullRequests(projectName, builds, pullRequests.length);
+      if (morePRs.length === 0) break;
+      pullRequests.push(...morePRs);
     }
     return pullRequests;
   }
