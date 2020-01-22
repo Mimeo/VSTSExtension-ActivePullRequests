@@ -133,15 +133,18 @@ export class App extends React.Component<{}, AppState> {
     const pullRequests = await this.getAllPullRequests(this.projectName);
 
     const parentUrl = new URL(document.referrer);
-    const baseUrl = new URL(parentUrl.pathname.split(new RegExp(encodeURIComponent(this.projectName), 'i'))[0], parentUrl);
-    let hostUrl = baseUrl.toString();
-    if (!hostUrl.toLocaleLowerCase().endsWith(hostContext.name.toLocaleLowerCase() + '/') &&
-      !baseUrl.origin.toLocaleLowerCase().includes(hostContext.name.toLocaleLowerCase())) {
-      // if we get here, that must mean projectName === hostContext.name and we aren't on a visualstudio.com domain
-      hostUrl += hostContext.name;
+    let baseUrl = parentUrl.origin;
+    if (parentUrl.pathname.split('/')[1] === 'tfs') {
+      baseUrl += `/tfs/${hostContext.name}/${this.projectName}`;
+    } else if (parentUrl.hostname.endsWith('visualstudio.com')) {
+      baseUrl += `/${this.projectName}`;
+    } else {
+      baseUrl += `/${hostContext.name}/${this.projectName}`;
     }
+    console.log('base URL', baseUrl);
+    
     this.setState({
-      hostUrl: hostUrl + (hostUrl.endsWith('/') ? '' : '/') + this.projectName,
+      hostUrl: baseUrl,
       settings: settings,
       repositories: repos,
       pullRequests: pullRequests.sort(this.defaultSortPrs),
