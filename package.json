@@ -19,7 +19,7 @@
     "rimraf": "^2.7.1",
     "sass-loader": "^7.3.1",
     "style-loader": "^0.23.1",
-    "tfx-cli": "^0.7.9",
+    "tfx-cli": "^0.12.0",
     "ts-loader": "^6.1.2",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3",
