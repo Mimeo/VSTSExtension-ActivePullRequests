@@ -4,7 +4,6 @@ import { GitRepository } from "azure-devops-extension-api/Git";
 import { Settings } from "./SettingsPanel/SettingsPanel.models";
 
 export interface AppState {
-  hostUrl: string;
   pullRequests: PullRequestTableItem[];
   repositories: GitRepository[];
   selectedTabId: string;

@@ -57,7 +57,6 @@ export class App extends React.Component<{}, AppState> {
     this.buildClient = API.getClient(BuildRestClient);
     this.filter = new Filter();
     this.state = {
-      hostUrl: undefined,
       showSettings: false,
       filter: {},
       repositories: [],
@@ -120,7 +119,6 @@ export class App extends React.Component<{}, AppState> {
     const extensionContext = SDK.getExtensionContext();
     console.log(`You're using version ${extensionContext.version} of All Active Pull Requests.`);
 
-    const hostContext = SDK.getHost();
     this.userContext = SDK.getUser();
     const accessToken = await SDK.getAccessToken();
     const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
@@ -132,19 +130,7 @@ export class App extends React.Component<{}, AppState> {
     const repos = (await this.gitClient.getRepositories(this.projectName)).sort((a, b) => a.name.localeCompare(b.name));
     const pullRequests = await this.getAllPullRequests(this.projectName);
 
-    const parentUrl = new URL(document.referrer);
-    let baseUrl = parentUrl.origin;
-    if (parentUrl.pathname.split('/')[1] === 'tfs') {
-      baseUrl += `/tfs/${hostContext.name}/${this.projectName}`;
-    } else if (parentUrl.hostname.endsWith('visualstudio.com')) {
-      baseUrl += `/${this.projectName}`;
-    } else {
-      baseUrl += `/${hostContext.name}/${this.projectName}`;
-    }
-    console.log('base URL', baseUrl);
-    
     this.setState({
-      hostUrl: baseUrl,
       settings: settings,
       repositories: repos,
       pullRequests: pullRequests.sort(this.defaultSortPrs),
@@ -245,13 +231,13 @@ export class App extends React.Component<{}, AppState> {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
           this.state.pullRequests ? this.state.pullRequests.filter(x => !x.isDraft) : undefined
-        } hostUrl={this.state.hostUrl} filter={this.state.filter} settings={this.state.settings} />
+        } filter={this.state.filter} settings={this.state.settings} />
       </section>;
     } else if (this.state.selectedTabId === TabType.drafts) {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={
           this.state.pullRequests ? this.state.pullRequests.filter(x => x.isDraft && x.author.id === this.userContext.id) : undefined
-        } hostUrl={this.state.hostUrl} filter={this.state.filter} settings={this.state.settings} />
+        } filter={this.state.filter} settings={this.state.settings} />
       </section>;
     }
     return <div></div>;
