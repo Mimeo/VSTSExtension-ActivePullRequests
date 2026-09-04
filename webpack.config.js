@@ -20,16 +20,8 @@ module.exports = {
           use: ["style-loader", "css-loader"],
       },
       {
-          test: /\.woff$/,
-          use: [{
-              loader: 'base64-inline-loader'
-          }]
-      },
-      {
-          test: /\.png$/,
-          use: [{
-              loader: 'base64-inline-loader'
-          }]
+          test: /\.(woff|png)$/,
+          type: "asset/inline"
       },
       {
         test: /\.tsx?$/,
