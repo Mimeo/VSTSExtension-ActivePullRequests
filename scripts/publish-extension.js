@@ -28,8 +28,10 @@ if (shareIndex >= 0 && !shareWith) {
   process.exit(1);
 }
 
-const tfx = process.platform === "win32" ? "tfx.cmd" : "tfx";
+const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const tfxArgs = [
+  "--no-install",
+  "tfx",
   "extension",
   "publish",
   "--manifests",
@@ -43,7 +45,10 @@ if (shareWith) {
   tfxArgs.push("--share-with", shareWith);
 }
 
-const result = spawnSync(tfx, tfxArgs, { stdio: "inherit" });
+const result = spawnSync(npx, tfxArgs, {
+  stdio: "inherit",
+  shell: process.platform === "win32"
+});
 if (result.error) {
   console.error(`Unable to start tfx: ${result.error.message}`);
   process.exit(1);
