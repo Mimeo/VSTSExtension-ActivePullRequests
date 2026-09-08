@@ -6,7 +6,7 @@ import { AgoFormat } from "azure-devops-ui/Utilities/Date";
 import { Tooltip } from "azure-devops-ui/TooltipEx";
 import { Link } from "azure-devops-ui/Link";
 import { Icon, IconSize } from "azure-devops-ui/Icon";
-import { VssPersona, IIdentityDetailsProvider } from "azure-devops-ui/VssPersona";
+import { VssPersona } from "azure-devops-ui/VssPersona";
 import { Status, StatusSize } from "azure-devops-ui/Status";
 import { IdentityRef } from "azure-devops-extension-api/WebApi/WebApi";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
@@ -14,16 +14,91 @@ import { getVoteStatus, getCommentStatus } from "./PullRequestTable.helpers";
 import * as styles from "./PullRequestTable.columns.scss";
 import { Settings } from "../SettingsPanel/SettingsPanel.models";
 import { CommentThreadStatus } from "azure-devops-extension-api/Git";
+import * as API from "azure-devops-extension-api";
+import { GraphRestClient } from "azure-devops-extension-api/Graph/GraphClient";
+import { AvatarSize } from "azure-devops-extension-api/Profile/Profile";
 
-function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
-  return {
-    getDisplayName() {
-      return identityRef.displayName;
-    },
-    getIdentityImageUrl(size: number) {
-      return identityRef._links["avatar"].href;
-    }
-  };
+class AvatarRestClient extends GraphRestClient {
+  getAvatarBytes(subjectDescriptor: string): Promise<ArrayBuffer> {
+    return this.beginRequest<ArrayBuffer>({
+      apiVersion: "5.2-preview.1",
+      routeTemplate: "_apis/Graph/Subjects/{subjectDescriptor}/Avatars",
+      routeValues: { subjectDescriptor: subjectDescriptor },
+      queryParams: { size: AvatarSize.Small, format: "png" },
+      httpResponseType: "image/png"
+    });
+  }
+}
+
+const avatarClient = API.getClient(AvatarRestClient);
+const avatarImageUrls: { [avatarKey: string]: Promise<string | undefined> } = {};
+
+function createAvatarImageUrl(avatarBytes: ArrayBuffer): string | undefined {
+  return avatarBytes.byteLength > 0
+    ? URL.createObjectURL(new Blob([avatarBytes], { type: "image/png" }))
+    : undefined;
+}
+
+function getIdentityDescriptor(identityRef: IdentityRef): string | undefined {
+  if (identityRef.descriptor) {
+    return identityRef.descriptor;
+  }
+
+  const avatarLink = identityRef._links && identityRef._links["avatar"];
+  const descriptorMatch = avatarLink && avatarLink.href
+    ? avatarLink.href.match(/\/MemberAvatars\/([^/?]+)/i)
+    : undefined;
+  return descriptorMatch ? decodeURIComponent(descriptorMatch[1]) : undefined;
+}
+
+function loadAvatarImage(identityRef: IdentityRef): Promise<string | undefined> {
+  const descriptor = getIdentityDescriptor(identityRef);
+  if (!descriptor) {
+    return Promise.resolve(undefined);
+  }
+
+  const avatarKey = descriptor;
+  if (!avatarImageUrls[avatarKey]) {
+    avatarImageUrls[avatarKey] = avatarClient.getAvatarBytes(descriptor)
+      .then(createAvatarImageUrl)
+      .catch(() => undefined);
+  }
+
+  return avatarImageUrls[avatarKey];
+}
+
+interface PersonaProps {
+  identityRef: IdentityRef;
+  size: "medium" | "small";
+  className?: string;
+}
+
+interface PersonaState {
+  imageUrl?: string;
+}
+
+class Persona extends React.Component<PersonaProps, PersonaState> {
+  public state: PersonaState = {};
+  private isMountedComponent = false;
+
+  componentDidMount() {
+    this.isMountedComponent = true;
+    loadAvatarImage(this.props.identityRef).then(imageUrl => {
+      if (imageUrl && this.isMountedComponent) {
+        this.setState({ imageUrl });
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.isMountedComponent = false;
+  }
+
+  render() {
+    return <VssPersona displayName={this.props.identityRef.displayName}
+      imageUrl={this.state.imageUrl} showInitialsOnImageError={true}
+      className={this.props.className} size={this.props.size} />;
+  }
 }
 
 export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestTableItem>[] {
@@ -47,8 +122,8 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
         tableColumn={tableColumn}
         key={"col-" + columnIndex}
         contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
-        <VssPersona identityDetailsProvider={summonPersona(tableItem.author)}
-          className="icon-large-margin" size={"medium"} />
+        <Persona identityRef={tableItem.author}
+          className="icon-large-margin" size="medium" />
         <div className="flex-row scroll-hidden">
           <Tooltip overflowOnly={true}>
             <span className="text-ellipsis">{tableItem.author.displayName}</span>
@@ -75,7 +150,7 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
   };
 
   const renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
-    const repoUri = tableItem.repo.webUrl;
+    const pullRequestUri = tableItem.link || `${tableItem.repoUrl}/pullrequest/${encodeURIComponent(tableItem.id)}`;
     return (
       <TwoLineTableCell
         className={styles.pullRequestColumn}
@@ -85,13 +160,13 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
         line1={
           <div className="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m flex-row scroll-hidden">
             <Tooltip overflowOnly={true}>
-              <Link href={`${repoUri}/pullRequest/${encodeURIComponent(tableItem.id)}`}
+              <Link href={pullRequestUri}
                 className="text-ellipsis" subtle={true} target="_top">#{tableItem.id}: {tableItem.title}</Link>
             </Tooltip>
           </div>
         } line2={
           <div className="fontSize font-size secondary-text flex-row flex-baseline text-ellipsis">
-            <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.baseBranch)}`}
+            <Link href={`${tableItem.repoUrl}?version=GB${encodeURIComponent(tableItem.baseBranch)}`}
               className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true} target="_top">
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
@@ -99,7 +174,7 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
               </Tooltip>
             </Link>
             <Icon iconName="ChevronRightSmall" size={IconSize.small} />
-            <Link href={`${repoUri}?version=GB${encodeURIComponent(tableItem.targetBranch)}`}
+            <Link href={`${tableItem.repoUrl}?version=GB${encodeURIComponent(tableItem.targetBranch)}`}
               className="monospaced-text text-ellipsis flex-row flex-center bolt-table-link bolt-table-inline-link" subtle={true} target="_top">
               <Icon iconName="OpenSource" />
               <Tooltip overflowOnly={true}>
@@ -209,7 +284,7 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
         {
           tableItem.reviewers.map(reviewer =>
             <span className={`${styles.personaWithVote} icon-margin`}>
-              <VssPersona identityDetailsProvider={summonPersona(reviewer)} size={"small"} />
+              <Persona identityRef={reviewer} size="small" />
               {Math.abs(reviewer.vote) > 1 ? (
                 <span className={styles.voteIcon}><Status {...getVoteStatus(reviewer.vote).status} size={StatusSize.s} /></span>
               ) : ""}

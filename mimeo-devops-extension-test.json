@@ -1,9 +1,9 @@
 {
   "manifestVersion": 1,
   "id": "mimeo-active-pull-requests-dev",
-  "version": "0.1.1",
+  "version": "0.1.7",
   "name": "All Active Pull Requests (Private Test)",
-  "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile"],
+  "scopes": ["vso.code", "vso.code_status", "vso.build", "vso.profile", "vso.graph"],
   "description": "Private test build of the extension that shows all active pull requests across all repos in a project.",
   "public": false,
   "publisher": "mimeo-vs-marketplace",

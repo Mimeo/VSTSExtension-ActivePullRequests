@@ -27,6 +27,8 @@ export interface PullRequestTableItem {
   creationDate: Date;
   title: string;
   repo: GitRepository;
+  repoUrl: string;
+  link: string;
   baseBranch: string;
   targetBranch: string;
   buildDetails: BuildDetails;

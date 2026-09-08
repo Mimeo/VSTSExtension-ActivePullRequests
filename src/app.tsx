@@ -1,7 +1,7 @@
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IExtensionDataManager, IExtensionDataService, IProjectPageService } from "azure-devops-extension-api";
 import { BuildReason, BuildRestClient, Build } from "azure-devops-extension-api/Build";
-import { GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
+import { GitPullRequestSearchCriteria, GitRepository, GitRestClient, PullRequestStatus } from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import { IUserContext } from "azure-devops-extension-sdk";
 import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
@@ -30,6 +30,22 @@ enum TabType {
   drafts = "drafts"
 }
 
+function getRepositoryWebUrl(repository: GitRepository): string {
+  const webLink = repository._links && repository._links.web;
+  if (webLink && webLink.href) {
+    return webLink.href;
+  }
+  if (repository.webUrl) {
+    return repository.webUrl;
+  }
+
+  const apiPath = "/_apis/git/repositories/";
+  const apiPathIndex = repository.url ? repository.url.toLowerCase().lastIndexOf(apiPath) : -1;
+  return apiPathIndex >= 0
+    ? `${repository.url.substring(0, apiPathIndex)}/_git/${encodeURIComponent(repository.name)}`
+    : undefined;
+}
+
 export class App extends React.Component<{}, AppState> {
   private showFilter = new ObservableValue<boolean>(false);
   private projectName: string;
@@ -40,9 +56,9 @@ export class App extends React.Component<{}, AppState> {
   private userContext: IUserContext;
   private filter: IFilter;
   private repoFilterSelection = new DropdownMultiSelection();
-  private searchFilter: {
+  private searchFilter: GitPullRequestSearchCriteria = {
     creatorId: undefined,
-    includeLinks: undefined,
+    includeLinks: true,
     repositoryId: undefined,
     reviewerId: undefined,
     sourceRefName: undefined,
@@ -127,8 +143,8 @@ export class App extends React.Component<{}, AppState> {
     this.projectName = (await projectService.getProject()).name;
     this.dataManager = await extDataService.getExtensionDataManager(SDK.getExtensionContext().id, accessToken);
     const settings = await this.getCurrentSettings(this.projectName);
-    const repos = (await this.gitClient.getRepositories(this.projectName)).sort((a, b) => a.name.localeCompare(b.name));
-    const pullRequests = await this.getAllPullRequests(this.projectName);
+    const repos = (await this.gitClient.getRepositories(this.projectName, true, true)).sort((a, b) => a.name.localeCompare(b.name));
+    const pullRequests = await this.getAllPullRequests(this.projectName, repos);
 
     this.setState({
       settings: settings,
@@ -141,18 +157,18 @@ export class App extends React.Component<{}, AppState> {
     await SDK.notifyLoadSucceeded();
   }
 
-  private async getAllPullRequests(projectName: string): Promise<PullRequestTableItem[]> {
+  private async getAllPullRequests(projectName: string, repositories: GitRepository[]): Promise<PullRequestTableItem[]> {
     const builds = await this.buildClient.getBuilds(projectName, null, null, null, null, null, null, BuildReason.PullRequest) || [];
-    const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName, builds);
+    const pullRequests: PullRequestTableItem[] = await this.getPullRequests(projectName, builds, repositories);
     while (pullRequests.length > 0 && pullRequests.length % 99 === 0) {
-      const morePRs = await this.getPullRequests(projectName, builds, pullRequests.length);
+      const morePRs = await this.getPullRequests(projectName, builds, repositories, pullRequests.length);
       if (morePRs.length === 0) break;
       pullRequests.push(...morePRs);
     }
     return pullRequests;
   }
 
-  private async getPullRequests(projectName: string, builds: Build[], skip = 0): Promise<PullRequestTableItem[]> {
+  private async getPullRequests(projectName: string, builds: Build[], repositories: GitRepository[], skip = 0): Promise<PullRequestTableItem[]> {
     const prs = await this.gitClient.getPullRequestsByProject(projectName, this.searchFilter, null, skip, 99);
     if (prs.length === 0) return [];
     return [
@@ -160,13 +176,20 @@ export class App extends React.Component<{}, AppState> {
         const currentUserReview = pr.reviewers.find(x => x.id === this.userContext.id);
         const latestBuild = builds.find(x => x.triggerInfo["pr.number"] != null && x.triggerInfo["pr.number"] === pr.pullRequestId.toString());
         const comments = (await this.gitClient.getThreads(pr.repository.id, pr.pullRequestId)).filter(thread => !thread.isDeleted && thread.status);
+        const repository = repositories.find(item => item.id === pr.repository.id) || pr.repository;
+        const repositoryWebUrl = getRepositoryWebUrl(repository);
+        const pullRequestWebLink = pr._links && pr._links.web
+          ? pr._links.web.href
+          : repositoryWebUrl ? `${repositoryWebUrl}/pullrequest/${encodeURIComponent(pr.pullRequestId)}` : undefined;
         return {
           id: pr.pullRequestId,
           isDraft: pr.isDraft,
           author: pr.createdBy,
           creationDate: pr.creationDate,
           title: pr.title,
-          repo: pr.repository,
+          repo: repository,
+          repoUrl: repositoryWebUrl,
+          link: pullRequestWebLink,
           baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
           targetBranch: pr.targetRefName.replace("refs/heads/", ""),
           vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
@@ -175,7 +198,6 @@ export class App extends React.Component<{}, AppState> {
             status: getStatusFromBuild(latestBuild)
           },
           reviewers: pr.reviewers,
-          link: pr.url,
           comments: comments
         };
       }))
