@@ -26,7 +26,7 @@ function summonPersona(identityRef: IdentityRef): IIdentityDetailsProvider {
   };
 }
 
-export function getColumnTemplate(hostUri: string, settings: Settings): ITableColumn<PullRequestTableItem>[] {
+export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestTableItem>[] {
   if(!settings) {
     settings = {
       AuthorColumnEnabled: true,
@@ -75,7 +75,7 @@ export function getColumnTemplate(hostUri: string, settings: Settings): ITableCo
   };
 
   const renderDetailsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
-    const repoUri = `${hostUri}/_git/${encodeURIComponent(tableItem.repo.name)}`;
+    const repoUri = tableItem.repo.webUrl;
     return (
       <TwoLineTableCell
         className={styles.pullRequestColumn}

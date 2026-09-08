@@ -9,7 +9,6 @@ import { Settings } from "../SettingsPanel/SettingsPanel.models";
 
 export interface PullRequestTableProps {
   pullRequests: PullRequestTableItem[];
-  hostUrl: string;
   filter: IFilterState;
   settings: Settings
 }
