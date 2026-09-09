@@ -17,6 +17,8 @@ import { CommentThreadStatus } from "azure-devops-extension-api/Git";
 import * as API from "azure-devops-extension-api";
 import { GraphRestClient } from "azure-devops-extension-api/Graph/GraphClient";
 import { AvatarSize } from "azure-devops-extension-api/Profile/Profile";
+import { Pill, PillSize, PillVariant } from "azure-devops-ui/Pill";
+import { PillGroup, PillGroupOverflow } from "azure-devops-ui/PillGroup";
 
 class AvatarRestClient extends GraphRestClient {
   getAvatarBytes(subjectDescriptor: string): Promise<ArrayBuffer> {
@@ -83,15 +85,27 @@ class Persona extends React.Component<PersonaProps, PersonaState> {
 
   componentDidMount() {
     this.isMountedComponent = true;
-    loadAvatarImage(this.props.identityRef).then(imageUrl => {
-      if (imageUrl && this.isMountedComponent) {
-        this.setState({ imageUrl });
-      }
-    });
+    this.loadImage(this.props.identityRef);
+  }
+
+  componentDidUpdate(previousProps: PersonaProps) {
+    if (getIdentityDescriptor(previousProps.identityRef) !== getIdentityDescriptor(this.props.identityRef)) {
+      this.setState({ imageUrl: undefined });
+      this.loadImage(this.props.identityRef);
+    }
   }
 
   componentWillUnmount() {
     this.isMountedComponent = false;
+  }
+
+  private loadImage(identityRef: IdentityRef) {
+    const descriptor = getIdentityDescriptor(identityRef);
+    loadAvatarImage(identityRef).then(imageUrl => {
+      if (imageUrl && this.isMountedComponent && descriptor === getIdentityDescriptor(this.props.identityRef)) {
+        this.setState({ imageUrl });
+      }
+    });
   }
 
   render() {
@@ -109,10 +123,13 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
       CommentsColumnEnabled: true,
       CreatedColumnEnabled: true,
       DetailsColumnEnabled: true,
+      TagsColumnEnabled: true,
       MyVoteColumnEnabled: true,
       RepositoryColumnEnabled: true,
       ReviewersColumnEnabled: true
     }
+  } else if (settings.TagsColumnEnabled === undefined) {
+    settings = { ...settings, TagsColumnEnabled: true };
   }
   
   const renderAuthorColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
@@ -197,6 +214,24 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
             <span className="text-ellipsis">{tableItem.repo.name}</span>
           </Tooltip>
         </div>
+      </SimpleTableCell>
+    );
+  };
+
+  const renderTagsColumn = (rowIndex: number, columnIndex: number, tableColumn: ITableColumn<PullRequestTableItem>, tableItem: PullRequestTableItem) => {
+    return (
+      <SimpleTableCell
+        columnIndex={columnIndex}
+        tableColumn={tableColumn}
+        key={"col-" + columnIndex}
+        contentClassName={`fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden ${styles.pullRequestColumn}`}>
+        <PillGroup overflow={PillGroupOverflow.fade}>
+          {tableItem.labels.map(label =>
+            <Pill key={label.id || label.name} size={PillSize.compact} variant={PillVariant.outlined}>
+              {label.name}
+            </Pill>
+          )}
+        </PillGroup>
       </SimpleTableCell>
     );
   };
@@ -348,7 +383,7 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
       }
     });
   }
-  
+
   if(settings.RepositoryColumnEnabled) {
     columns.push({
       id: "repository",
@@ -425,6 +460,23 @@ export function getColumnTemplate(settings: Settings): ITableColumn<PullRequestT
       renderCell: renderReviewersColumn,
       width: new ObservableValue(-33),
       minWidth: 150
+    });
+  }
+
+  if(settings.TagsColumnEnabled) {
+    columns.push({
+      columnLayout: TableColumnLayout.singleLinePrefix,
+      id: "tags",
+      name: "Tags",
+      readonly: true,
+      renderCell: renderTagsColumn,
+      onSize: onSize,
+      width: new ObservableValue(-33),
+      minWidth: 150,
+      sortProps: {
+        ariaLabelAscending: "Sorted A to Z",
+        ariaLabelDescending: "Sorted Z to A"
+      }
     });
   }
 

@@ -7,9 +7,9 @@ import * as styles from "./SettingsPanel.scss";
 export default class SettingsPanel extends React.Component<SettingsPanelProps, ISettingsPanelState> {
   constructor(props: SettingsPanelProps) {
     super(props);
-    this.state = { 
+    this.state = {
       dataManager: props.dataManager,
-      settings: props.settings,
+      settings: { ...props.settings },
       projectName: props.projectName
     };
   }
@@ -113,6 +113,17 @@ export default class SettingsPanel extends React.Component<SettingsPanelProps, I
                   onChange={(event, value) => { this.updateSetting(value, SettingsColumn.reviewers);}}
                   />
             </div>
+
+            <div className={`flex-row ${styles.settingItem}`}>
+              <div className="font-size-mm font-weight-semibold flex-noshrink flex-grow">Tags</div>
+              <Toggle
+                offText={"Hide"}
+                onText={"Show"}
+                checked={this.state.settings.TagsColumnEnabled}
+                onChange={(event, value) => { this.updateSetting(value, SettingsColumn.tags);}}
+                />
+            </div>
+
           </div>
         </Panel>
       </div>
@@ -120,17 +131,15 @@ export default class SettingsPanel extends React.Component<SettingsPanelProps, I
   }
 
   private updateSetting(value: boolean, name: SettingsColumn) {
-    var settings = this.state.settings;
-    settings[name] = value;
-
     this.setState({
-      settings: settings
+      settings: { ...this.state.settings, [name]: value }
     });
   }
 
   private saveSettings() {
     this.state.dataManager!.setValue<string>(`${this.state.projectName}-extension-settings`, JSON.stringify(this.state.settings) || "", { scopeType: "User" }).then(() => {
-      window.location.reload()
+      this.props.onSave(this.state.settings);
+      this.props.closeSettings();
     });
   }
 }

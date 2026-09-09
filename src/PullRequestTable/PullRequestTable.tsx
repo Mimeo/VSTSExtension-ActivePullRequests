@@ -98,10 +98,29 @@ export class PullRequestTable extends React.Component<PullRequestTableProps, Pul
       });
     }
 
+    if(this.props.settings.ReviewersColumnEnabled) {
+      functionsResult.push(null);
+    }
+
+    if(this.props.settings.TagsColumnEnabled !== false) {
+      functionsResult.push((item1, item2) => {
+        const tags1 = item1.value.labels.map(label => label.name).join(", ");
+        const tags2 = item2.value.labels.map(label => label.name).join(", ");
+        return tags1.localeCompare(tags2);
+      });
+    }
+
     return functionsResult;
   }
 
   componentDidUpdate(prevProps: PullRequestTableProps, prevState: PullRequestTableState) {
+    if (prevProps.settings !== this.props.settings) {
+      this.setState({
+        columns: getColumns(this.props.settings),
+        settings: this.props.settings
+      });
+    }
+
     if (!areArraysEqual(prevProps.pullRequests, this.props.pullRequests) || prevProps.filter !== this.props.filter) {
       this.setState({
         pullRequestProvider: new ObservableArray<ObservableValue<PullRequestTableItem>>(

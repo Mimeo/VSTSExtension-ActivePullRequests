@@ -123,7 +123,7 @@ export class App extends React.Component<{}, AppState> {
           </div>
         </ConditionalChildren>
         <ConditionalChildren renderChildren={this.state.showSettings}>
-          <SettingsPanel settings={this.state.settings} dataManager={this.dataManager} closeSettings={this.closeSettings} projectName={this.projectName} />
+          <SettingsPanel settings={this.state.settings} dataManager={this.dataManager} closeSettings={this.closeSettings} onSave={this.onSettingsSaved} projectName={this.projectName} />
         </ConditionalChildren>
         {this.renderTabContents()}
       </Page>
@@ -190,6 +190,7 @@ export class App extends React.Component<{}, AppState> {
           repo: repository,
           repoUrl: repositoryWebUrl,
           link: pullRequestWebLink,
+          labels: pr.labels || [],
           baseBranch: pr.sourceRefName.replace("refs/heads/", ""),
           targetBranch: pr.targetRefName.replace("refs/heads/", ""),
           vote: getVoteStatus(currentUserReview ? currentUserReview.vote : -1),
@@ -205,22 +206,32 @@ export class App extends React.Component<{}, AppState> {
   }
 
   private async getCurrentSettings(projectName: string): Promise<Settings> {
-    var settingsResult = await this.dataManager.getValue<string>(`${projectName}-extension-settings`, { scopeType: "User" });
-    if (settingsResult && settingsResult !== "") {
-      return JSON.parse(settingsResult);
-    }
-
-    // Default settings
-    return {
+    const defaultSettings: Settings = {
       AuthorColumnEnabled: true,
       BuildStatusColumnEnabled: true,
       CommentsColumnEnabled: true,
       CreatedColumnEnabled: true,
       DetailsColumnEnabled: true,
+      TagsColumnEnabled: true,
       MyVoteColumnEnabled: true,
       RepositoryColumnEnabled: true,
       ReviewersColumnEnabled: true
     };
+    var settingsResult = await this.dataManager.getValue<string>(`${projectName}-extension-settings`, { scopeType: "User" });
+    if (settingsResult && settingsResult !== "") {
+      const savedSettings = JSON.parse(settingsResult);
+      return {
+        ...defaultSettings,
+        ...savedSettings,
+        TagsColumnEnabled: savedSettings.TagsColumnEnabled !== undefined
+          ? savedSettings.TagsColumnEnabled
+          : savedSettings.LabelsColumnEnabled !== undefined
+            ? savedSettings.LabelsColumnEnabled
+            : defaultSettings.TagsColumnEnabled
+      };
+    }
+
+    return defaultSettings;
   }
 
   private renderTabBarCommands = () => {
@@ -246,6 +257,10 @@ export class App extends React.Component<{}, AppState> {
     if (this.isReady) {
       this.setState({ selectedTabId: newTabId });
     }
+  }
+
+  private onSettingsSaved = (settings: Settings) => {
+    this.setState({ settings: { ...settings }, showSettings: false });
   }
 
   private renderTabContents() {
