@@ -4,6 +4,7 @@ export enum SettingsColumn {
   author = "AuthorColumnEnabled",
   created = "CreatedColumnEnabled",
   details = "DetailsColumnEnabled",
+  tags = "TagsColumnEnabled",
   repository = "RepositoryColumnEnabled",
   comments = "CommentsColumnEnabled",
   buildStatus = "BuildStatusColumnEnabled",
@@ -15,6 +16,7 @@ export interface Settings {
   AuthorColumnEnabled: boolean,
   CreatedColumnEnabled: boolean,
   DetailsColumnEnabled: boolean,
+  TagsColumnEnabled: boolean,
   RepositoryColumnEnabled: boolean,
   CommentsColumnEnabled: boolean,
   BuildStatusColumnEnabled: boolean,
@@ -30,6 +32,7 @@ export interface ISettingsPanelState {
 
 export interface SettingsPanelProps {
   closeSettings: Function
+  onSave: (settings: Settings) => void
   dataManager: IExtensionDataManager;
   settings: Settings;
   projectName: string;
