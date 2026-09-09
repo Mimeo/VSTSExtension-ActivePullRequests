@@ -85,15 +85,27 @@ class Persona extends React.Component<PersonaProps, PersonaState> {
 
   componentDidMount() {
     this.isMountedComponent = true;
-    loadAvatarImage(this.props.identityRef).then(imageUrl => {
-      if (imageUrl && this.isMountedComponent) {
-        this.setState({ imageUrl });
-      }
-    });
+    this.loadImage(this.props.identityRef);
+  }
+
+  componentDidUpdate(previousProps: PersonaProps) {
+    if (getIdentityDescriptor(previousProps.identityRef) !== getIdentityDescriptor(this.props.identityRef)) {
+      this.setState({ imageUrl: undefined });
+      this.loadImage(this.props.identityRef);
+    }
   }
 
   componentWillUnmount() {
     this.isMountedComponent = false;
+  }
+
+  private loadImage(identityRef: IdentityRef) {
+    const descriptor = getIdentityDescriptor(identityRef);
+    loadAvatarImage(identityRef).then(imageUrl => {
+      if (imageUrl && this.isMountedComponent && descriptor === getIdentityDescriptor(this.props.identityRef)) {
+        this.setState({ imageUrl });
+      }
+    });
   }
 
   render() {
