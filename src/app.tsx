@@ -30,6 +30,11 @@ enum TabType {
   drafts = "drafts"
 }
 
+function isUnauthorizedError(error: any): boolean {
+  const text = `${error && error.message || ""}`;
+  return !!error && (error.status === 401 || error.statusCode === 401 || /TF400813|\b401\b|Unauthorized/i.test(text));
+}
+
 function getRepositoryWebUrl(repository: GitRepository): string {
   const webLink = repository._links && repository._links.web;
   if (webLink && webLink.href) {
@@ -132,6 +137,32 @@ export class App extends React.Component<{}, AppState> {
 
   private async initialize() {
     await SDK.ready();
+    const maxAttempts = 3;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await this.loadData();
+        return;
+      } catch (error) {
+        const unauthorized = isUnauthorizedError(error);
+        if (unauthorized && attempt < maxAttempts) {
+          // Anonymous/401 responses are often transient (stale or not yet issued token); retry with a fresh token.
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          continue;
+        }
+        const message = error && error.message ? error.message : String(error);
+        console.error("All Active Pull Requests failed to load.", error);
+        this.setState({
+          loadError: unauthorized
+            ? "Azure DevOps rejected the request as unauthenticated. Reload the page or sign in again."
+            : `Failed to load pull requests: ${message}`
+        });
+        await SDK.notifyLoadFailed(message);
+        return;
+      }
+    }
+  }
+
+  private async loadData() {
     const extensionContext = SDK.getExtensionContext();
     console.log(`You're using version ${extensionContext.version} of All Active Pull Requests.`);
 
@@ -142,7 +173,14 @@ export class App extends React.Component<{}, AppState> {
 
     this.projectName = (await projectService.getProject()).name;
     this.dataManager = await extDataService.getExtensionDataManager(SDK.getExtensionContext().id, accessToken);
-    const settings = await this.getCurrentSettings(this.projectName);
+    let settings: Settings;
+    try {
+      settings = await this.getCurrentSettings(this.projectName);
+    } catch (error) {
+      if (isUnauthorizedError(error)) throw error;
+      console.warn("Could not load saved settings, using defaults.", error);
+      settings = this.getDefaultSettings();
+    }
     const repos = (await this.gitClient.getRepositories(this.projectName, true, true)).sort((a, b) => a.name.localeCompare(b.name));
     const pullRequests = await this.getAllPullRequests(this.projectName, repos);
 
@@ -151,8 +189,9 @@ export class App extends React.Component<{}, AppState> {
       repositories: repos,
       pullRequests: pullRequests.sort(this.defaultSortPrs),
       activePrBadge: pullRequests.filter(pr => !pr.isDraft).length,
-      draftPrBadge: pullRequests.filter(pr => pr.isDraft && pr.author.id === this.userContext.id).length
-    });
+      draftPrBadge: pullRequests.filter(pr => pr.isDraft && pr.author.id ===       this.userContext.id).length,
+            loadError: undefined
+          });
     this.isReady = true;
     await SDK.notifyLoadSucceeded();
   }
@@ -205,8 +244,8 @@ export class App extends React.Component<{}, AppState> {
     ];
   }
 
-  private async getCurrentSettings(projectName: string): Promise<Settings> {
-    const defaultSettings: Settings = {
+  private getDefaultSettings(): Settings {
+    return {
       AuthorColumnEnabled: true,
       BuildStatusColumnEnabled: true,
       CommentsColumnEnabled: true,
@@ -217,6 +256,10 @@ export class App extends React.Component<{}, AppState> {
       RepositoryColumnEnabled: true,
       ReviewersColumnEnabled: true
     };
+  }
+
+  private async getCurrentSettings(projectName: string): Promise<Settings> {
+    const defaultSettings = this.getDefaultSettings();
     var settingsResult = await this.dataManager.getValue<string>(`${projectName}-extension-settings`, { scopeType: "User" });
     if (settingsResult && settingsResult !== "") {
       const savedSettings = JSON.parse(settingsResult);
@@ -264,6 +307,9 @@ export class App extends React.Component<{}, AppState> {
   }
 
   private renderTabContents() {
+    if (this.state.loadError) {
+      return <section className="page-content page-content-top">{this.state.loadError}</section>;
+    }
     if (this.state.selectedTabId === TabType.active) {
       return <section className="page-content page-content-top">
         <PullRequestTable pullRequests={

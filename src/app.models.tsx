@@ -12,4 +12,5 @@ export interface AppState {
   filter: IFilterState;
   showSettings: boolean;
   settings: Settings;
+  loadError?: string;
 }
